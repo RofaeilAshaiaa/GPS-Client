@@ -1,1 +1,1 @@
-include ':gactivity'
+include ':gactivity', ':gclientlib'
