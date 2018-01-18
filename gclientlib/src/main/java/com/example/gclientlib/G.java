@@ -33,6 +33,17 @@ public class G implements APIMethods {
      */
     private int mThresholdRadius;
 
+    private String mPriority;
+
+    /**
+     * desired fastest interval for location updates in seconds
+     */
+    private int mFastestLocationUpdateIntervalSeconds;
+
+    private int mThresholdTime;
+
+    private boolean mIsLibraryActivated;
+
     @Override
     public void startLocationMonitoring() {
         mMonitoring = true;
@@ -49,13 +60,13 @@ public class G implements APIMethods {
     }
 
     @Override
-    public void setLocationUpdatesFrequency(long timeInSeconds) {
-        mLocationUpdateIntervalSeconds = timeInSeconds;
+    public long getLocationUpdatesFrequency() {
+        return mLocationUpdateIntervalSeconds;
     }
 
     @Override
-    public long getLocationUpdatesFrequency() {
-        return mLocationUpdateIntervalSeconds;
+    public void setLocationUpdatesFrequency(long timeInSeconds) {
+        mLocationUpdateIntervalSeconds = timeInSeconds;
     }
 
     @Override
@@ -74,13 +85,13 @@ public class G implements APIMethods {
     }
 
     @Override
-    public void setLocationUpdatesSourceProvider(String locationSourceProvider) {
-        mLocationUpdatesSource = locationSourceProvider;
+    public String getLocationUpdatesSourceProvider() {
+        return mLocationUpdatesSource;
     }
 
     @Override
-    public String getLocationUpdatesSourceProvider() {
-        return mLocationUpdatesSource;
+    public void setLocationUpdatesSourceProvider(String locationSourceProvider) {
+        mLocationUpdatesSource = locationSourceProvider;
     }
 
     @Override
@@ -92,4 +103,53 @@ public class G implements APIMethods {
     public void setThresholdRadius(int distanceInMeters) {
         mThresholdRadius = distanceInMeters;
     }
+
+    @Override
+    public int getThresholdTime() {
+        return mThresholdTime;
+    }
+
+    @Override
+    public void setThresholdTime(int seconds) {
+        mThresholdTime = seconds;
+    }
+
+    @Override
+    public int getFastestInterval() {
+        return mFastestLocationUpdateIntervalSeconds;
+    }
+
+    @Override
+    public void setFastestInterval(int timeSeconds) {
+        mFastestLocationUpdateIntervalSeconds = timeSeconds;
+    }
+
+    @Override
+    public String getPriority() {
+        return mPriority;
+    }
+
+    @Override
+    public void setPriority(String priority) {
+        mPriority = priority;
+    }
+
+    @Override
+    public boolean activateLibrary() {
+
+        mIsLibraryActivated = true;
+        return mIsLibraryActivated;
+    }
+
+    @Override
+    public boolean deactivateLibrary() {
+        mIsLibraryActivated = false;
+        return mIsLibraryActivated;
+    }
+
+    @Override
+    public void reconnect() {
+
+    }
+
 }

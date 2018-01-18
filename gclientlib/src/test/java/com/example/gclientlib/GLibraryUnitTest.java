@@ -39,5 +39,18 @@ public class GLibraryUnitTest {
         assertTrue(guser.isClientMonitoringInBackground());
         guser.stopMonitoringInBackground();
         assertFalse(guser.isClientMonitoringInBackground());
+
+        guser.setPriority("top");
+        assertEquals("top", guser.getPriority());
+
+        guser.setThresholdTime(20);
+        assertEquals(20, guser.getThresholdTime());
+
+        assertTrue(guser.activateLibrary());
+        assertFalse(guser.deactivateLibrary());
+
+        guser.setFastestInterval(100);
+        assertEquals(100, guser.getFastestInterval());
+
     }
 }

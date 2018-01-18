@@ -5,7 +5,7 @@ package com.example.gclientlib;
  *         Created on 17/01/18.
  */
 
-public interface APIMethods {
+interface APIMethods {
 
     /**
      * starts location monitoring for the client location
@@ -23,17 +23,16 @@ public interface APIMethods {
     boolean isClientMonitoringLocation();
 
     /**
-     * sets the frequency of receiving location updates of the client
-     *
-     * @param timeInSeconds time in seconds to be set for receiving location updates
-     * @return true if time set successfully
-     */
-    void setLocationUpdatesFrequency(long timeInSeconds);
-
-    /**
      * returns the Location updates interval
      */
     long getLocationUpdatesFrequency();
+
+    /**
+     * sets the frequency of receiving location updates of the client
+     *
+     * @param timeInSeconds time in seconds to be set for receiving location updates
+     */
+    void setLocationUpdatesFrequency(long timeInSeconds);
 
     /**
      * start the background service to continue receiving updates even if the app is closed
@@ -51,29 +50,65 @@ public interface APIMethods {
     boolean isClientMonitoringInBackground();
 
     /**
-     * determine the source provider of the location whether to receive location
-     * updates from NETWORK_PROVIDER or GPS_PROVIDER
-     *
-     * @param locationSourceProvider  a string determining whether to use ACCESS_FINE_LOCATION or ACCESS_COARSE_LOCATION
-     * @return true if the provider set successfully
-     */
-    void setLocationUpdatesSourceProvider(String locationSourceProvider);
-
-    /**
      * gets the location updates provider
+     *
      * @return a string determining whether to use ACCESS_FINE_LOCATION or ACCESS_COARSE_LOCATION
      */
     String getLocationUpdatesSourceProvider();
 
     /**
-     * sets the radius of threshold distance
-     * @param distanceInMeters radius of threshold distance in meters
-     * @return true if the value set successfully
+     * determine the source provider of the location whether to receive location
+     * updates from NETWORK_PROVIDER or GPS_PROVIDER
+     *
+     * @param locationSourceProvider a string determining whether to use ACCESS_FINE_LOCATION or ACCESS_COARSE_LOCATION
      */
-    void setThresholdRadius(int distanceInMeters);
+    void setLocationUpdatesSourceProvider(String locationSourceProvider);
 
     /**
      * gets radius of threshold
      */
     int getThresholdRadius();
+
+    /**
+     * sets the radius of threshold distance
+     *
+     * @param distanceInMeters radius of threshold distance in meters
+     */
+    void setThresholdRadius(int distanceInMeters);
+
+    /**
+     * gets threshold time
+     *
+     * @return time of threshold in seconds
+     */
+    int getThresholdTime();
+
+    /**
+     * sets the time of threshold
+     *
+     * @param seconds time in seconds
+     */
+    void setThresholdTime(int seconds);
+
+    /**
+     * gets the fastest  frequency interval for receiving location updates
+     *
+     * @return fastest interval time in seconds
+     */
+    int getFastestInterval();
+
+    /**
+     * sets the fastest  frequency interval for receiving location updates
+     */
+    void setFastestInterval(int timeSeconds);
+
+    String getPriority();
+
+    void setPriority(String priority);
+
+    boolean activateLibrary();
+
+    boolean deactivateLibrary();
+
+    void reconnect();
 }
