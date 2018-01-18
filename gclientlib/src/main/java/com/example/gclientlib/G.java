@@ -92,4 +92,13 @@ public class G implements APIMethods {
     public void setThresholdRadius(int distanceInMeters) {
         mThresholdRadius = distanceInMeters;
     }
+
+    @Override
+    public void setThresholdTime(int seconds) {};
+    @Override
+    public int getThresholdTime(){return 1;};
+    @Override
+    public boolean activateLibrary(){return true;};
+    @Override
+    public boolean deactivateLibrary(){return true;};
 }

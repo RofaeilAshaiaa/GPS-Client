@@ -76,4 +76,12 @@ public interface APIMethods {
      * gets radius of threshold
      */
     int getThresholdRadius();
+
+    void setThresholdTime(int seconds);
+    int getThresholdTime();
+
+    boolean activateLibrary();
+    boolean deactivateLibrary();
+
+
 }
