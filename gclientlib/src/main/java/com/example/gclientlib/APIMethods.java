@@ -102,13 +102,33 @@ interface APIMethods {
      */
     void setFastestInterval(int timeSeconds);
 
-    String getPriority();
+    /**
+     * gets the priority of the request
+     */
+    int getPriority();
 
-    void setPriority(String priority);
+    /**
+     * sets the priority of the request
+     */
+    void setPriority(int priority);
 
     boolean activateLibrary();
 
     boolean deactivateLibrary();
 
+    /**
+     * try to reconnect to google location service
+     */
     void reconnect();
+
+    /**
+     * connect to google location service
+     */
+    void connect();
+
+    /**
+     * disconnect from google location service
+     */
+    void disconnect();
+
 }
