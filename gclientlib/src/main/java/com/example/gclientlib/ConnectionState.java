@@ -6,5 +6,5 @@ package com.example.gclientlib;
  */
 
 public enum ConnectionState {
-    CONNECTED, TRYING_TO_CONNECT, DISCONNECTED, CONNECTION_Failed
+    CONNECTED, DISCONNECTED
 }

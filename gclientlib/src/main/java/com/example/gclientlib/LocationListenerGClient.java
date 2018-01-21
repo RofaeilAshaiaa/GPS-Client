@@ -11,6 +11,6 @@ public interface LocationListenerGClient {
 
     void newLocationUpdateReceived(Location location);
 
-    void onError(int error);
+    void onLocationAvailabilityChanged(ConnectionState state);
 
 }

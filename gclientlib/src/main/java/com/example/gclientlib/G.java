@@ -1,22 +1,24 @@
 package com.example.gclientlib;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.IntentSender;
+import android.content.pm.PackageManager;
 import android.location.Location;
-import android.os.Bundle;
+import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.common.api.CommonStatusCodes;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResponse;
@@ -24,7 +26,9 @@ import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
+
+import java.text.DateFormat;
+import java.util.Date;
 
 /**
  * @author Rofaeil Ashaiaa
@@ -34,11 +38,14 @@ import com.google.android.gms.tasks.Task;
 public class G implements APIMethods {
 
     public static final String TAG = "GLibrary";
-    public static final int REQUEST_CHECK_SETTINGS = 1;
+    /**
+     * Constant used in the location settings dialog.
+     */
+    private static final int REQUEST_CHECK_SETTINGS = 0x9;
     /**
      * desired interval for location Update interval in milliseconds
      */
-    private long mLocationUpdateIntervalMilliseconds = 10000;
+    private long mLocationUpdateIntervalMilliseconds;
     /**
      * desired interval for location updates in seconds
      */
@@ -59,96 +66,97 @@ public class G implements APIMethods {
      * determining threshold radius
      */
     private int mThresholdRadius;
+    /**
+     * determine the priority of location updates request
+     */
     private int mPriority;
+    /**
+     * desired fastest interval for location updates in milliseconds
+     */
+    private int mFastestLocationUpdateIntervalMilliseconds;
     /**
      * desired fastest interval for location updates in seconds
      */
     private int mFastestLocationUpdateIntervalSeconds;
     private int mThresholdTime;
+    /**
+     * Time when the location was updated represented as a String.
+     */
+    private String mLastUpdateTime;
+    /**
+     * determine whether the library activated and in use or not
+     */
     private boolean mIsLibraryActivated;
-    private GoogleApiClient googleApiClient = null;
     /**
      * mListenerGClient to receive location updates from our library
      */
     private LocationListenerGClient mListenerGClient;
-
     /**
      * determine whether the Location Settings are Satisfied or not
      */
     private boolean mAreLocationSettingsSatisfied;
-
     /**
-     * define location request object
+     * Provides access to the Fused Location Provider API.
+     */
+    private FusedLocationProviderClient mFusedLocationClient;
+    /**
+     * Provides access to the Location Settings API.
+     */
+    private SettingsClient mSettingsClient;
+    /**
+     * Stores parameters for requests to the FusedLocationProviderApi.
      */
     private LocationRequest mLocationRequest;
-
     /**
-     * last known location of the client
+     * Stores the types of location services the client is interested in using. Used for checking
+     * settings to determine if the device has optimal location settings.
      */
-    private Location mLastKnownLocation;
-
+    private LocationSettingsRequest mLocationSettingsRequest;
     /**
-     * callbacks to location updates
+     * Callback for Location events.
      */
     private LocationCallback mLocationCallback;
-    private FusedLocationProviderClient mFusedLocationClient;
-    private ConnectionState mConnectionState;
+    /**
+     * Represents a geographical location.
+     */
+    private Location mCurrentLocation;
+
+
 
     public G(final LocationListenerGClient listenerGClient) {
 
         this.mListenerGClient = listenerGClient;
+    }
 
-        googleApiClient = new GoogleApiClient.Builder((Context) listenerGClient)
-                .addApi(LocationServices.API)
-                .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
-                                            @Override
-                                            public void onConnected(Bundle bundle) {
-                                                Log.i(TAG, "Connected to Google API Client");
-                                                mConnectionState = ConnectionState.CONNECTED;
-                                            }
+    @Override
+    public boolean activateLibrary() {
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient((Activity) mListenerGClient);
+        mSettingsClient = LocationServices.getSettingsClient((Activity) mListenerGClient);
+        // Kick off the process of building the LocationCallback, LocationRequest, and
+        // LocationSettingsRequest objects.
+        createLocationCallback();
+        createLocationRequest();
+        buildLocationSettingsRequest();
+        mIsLibraryActivated = true;
+        startLocationMonitoring();
+        return mIsLibraryActivated;
+    }
 
-                                            @Override
-                                            public void onConnectionSuspended(int i) {
-                                                Log.i(TAG, "Suspended connection to Google API Client");
-                                                mConnectionState = ConnectionState.DISCONNECTED;
-                                            }
-                                        }
-
-                )
-                .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
-                    @Override
-                    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-                        Log.i(TAG, "Failed to connect to Google API Client - " + connectionResult.getErrorMessage());
-                        mConnectionState = ConnectionState.CONNECTION_Failed;
-                    }
-                })
-                .build();
-
+    @Override
+    public boolean deactivateLibrary() {
+        mIsLibraryActivated = false;
+        stopLocationMonitoring();
+        return mIsLibraryActivated;
     }
 
     @Override
     public void startLocationMonitoring() {
-
-        try {
-            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient,
-                    mLocationRequest, new LocationListener() {
-                        @Override
-                        public void onLocationChanged(Location location) {
-                            Log.i(TAG, "Loc Update: Lat/Long = " + location.getLatitude() + " " + location.getLongitude());
-                            mListenerGClient.newLocationUpdateReceived(location);
-                        }
-
-                    });
-        } catch (SecurityException e) {
-            e.printStackTrace();
-        }
-
+        startLocationUpdates();
         mMonitoring = true;
     }
 
     @Override
     public void stopLocationMonitoring() {
-
         mFusedLocationClient.removeLocationUpdates(mLocationCallback);
         mMonitoring = false;
 
@@ -167,6 +175,13 @@ public class G implements APIMethods {
     @Override
     public void setLocationUpdatesFrequency(long timeInSeconds) {
         mLocationUpdateIntervalSeconds = timeInSeconds;
+        mLocationUpdateIntervalMilliseconds = timeInSeconds * 1_000;
+        // construct the location request with the new parameters
+        createLocationRequest();
+        buildLocationSettingsRequest();
+        //start location monitoring with the new settings
+        if (mIsLibraryActivated && (mMonitoring || mMonitoringInBackground))
+            startLocationMonitoring();
     }
 
     @Override
@@ -222,6 +237,14 @@ public class G implements APIMethods {
     @Override
     public void setFastestInterval(int timeSeconds) {
         mFastestLocationUpdateIntervalSeconds = timeSeconds;
+        mFastestLocationUpdateIntervalMilliseconds = timeSeconds * 1_000;
+
+        // construct the location request with the new parameters
+        createLocationRequest();
+        buildLocationSettingsRequest();
+        //start location monitoring with the new settings
+        if (mIsLibraryActivated && (mMonitoring || mMonitoringInBackground))
+            startLocationMonitoring();
     }
 
     @Override
@@ -232,108 +255,129 @@ public class G implements APIMethods {
     @Override
     public void setPriority(int priority) {
         mPriority = priority;
+        // construct the location request with the new parameters
         createLocationRequest();
+        buildLocationSettingsRequest();
+        //start location monitoring with the new settings
+        if (mIsLibraryActivated && (mMonitoring || mMonitoringInBackground))
+            startLocationMonitoring();
     }
 
-    @Override
-    public boolean activateLibrary() {
-
-        try {
-            mFusedLocationClient = LocationServices.getFusedLocationProviderClient((Activity) mListenerGClient);
-            mFusedLocationClient.getLastLocation()
-                    .addOnSuccessListener((Activity) mListenerGClient, new OnSuccessListener<Location>() {
-                        @Override
-                        public void onSuccess(Location location) {
-                            mIsLibraryActivated = true;
-                            // Got last known location. In some rare situations this can be null.
-                            if (location != null) {
-                                mLastKnownLocation = location;
-                                Log.i(TAG, "Last Location: Lat/Long = " + location.getLatitude()  + " " + location.getLongitude());
-                            }
-                        }
-                    });
-        } catch (SecurityException e) {
-            e.printStackTrace();
-            mIsLibraryActivated =  false;
-        }
-
-        return mIsLibraryActivated;
-    }
-
-    @Override
-    public boolean deactivateLibrary() {
-        mIsLibraryActivated = false;
-        return mIsLibraryActivated;
-    }
-
-    @Override
-    public void reconnect() {
-        googleApiClient.reconnect();
-    }
-
-    @Override
-    public void connect() {
-        googleApiClient.connect();
-    }
-
-    @Override
-    public void disconnect() {
-        googleApiClient.disconnect();
-    }
-
+    /**
+     * Sets up the location request. Android has two location request settings:
+     * {@code ACCESS_COARSE_LOCATION} and {@code ACCESS_FINE_LOCATION}. These settings control
+     * the accuracy of the current location. This sample uses ACCESS_FINE_LOCATION, as defined in
+     * the AndroidManifest.xml.
+     * <p/>
+     * When the ACCESS_FINE_LOCATION setting is specified, combined with a fast update
+     * interval (5 seconds), the Fused Location Provider API returns location updates that are
+     * accurate to within a few feet.
+     * <p/>
+     * These settings are appropriate for mapping applications that show real-time location
+     * updates.
+     */
     private void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
 
-        mLocationRequest = LocationRequest.create()
-                .setInterval(mLocationUpdateIntervalSeconds)
-                .setFastestInterval(mFastestLocationUpdateIntervalSeconds)
-                //.setNumUpdates(5)
-                .setPriority(mPriority);
+        // Sets the desired interval for active location updates. This interval is
+        // inexact. You may not receive updates at all if no location sources are available, or
+        // you may receive them slower than requested. You may also receive updates faster than
+        // requested if other applications are requesting location at a faster interval.
+        mLocationRequest.setInterval(mLocationUpdateIntervalMilliseconds);
+
+        // Sets the fastest rate for active location updates. This interval is exact, and your
+        // application will never receive updates faster than this value.
+        mLocationRequest.setFastestInterval(mFastestLocationUpdateIntervalMilliseconds);
+
+        mLocationRequest.setPriority(mPriority);
     }
 
-    private void areLocationRequestSettingsSatisfied() {
-
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-                .addLocationRequest(mLocationRequest);
-
-        SettingsClient client = LocationServices.getSettingsClient((Activity) mListenerGClient);
-        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
-
-        task.addOnSuccessListener((Activity) mListenerGClient, new OnSuccessListener<LocationSettingsResponse>() {
+    /**
+     * Creates a callback for receiving location events.
+     */
+    private void createLocationCallback() {
+        mLocationCallback = new LocationCallback() {
             @Override
-            public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
-                // All location settings are satisfied. The client can initialize
-                // location requests here.
-                // ...
-                mAreLocationSettingsSatisfied = true;
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+
+                mCurrentLocation = locationResult.getLastLocation();
+                mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+                mListenerGClient.newLocationUpdateReceived(mCurrentLocation);
             }
-        });
 
-        task.addOnFailureListener((Activity) mListenerGClient, new OnFailureListener() {
             @Override
-            public void onFailure(@NonNull Exception e) {
-                int statusCode = ((ApiException) e).getStatusCode();
-                switch (statusCode) {
-                    case CommonStatusCodes.RESOLUTION_REQUIRED:
-                        // Location settings are not satisfied, but this can be fixed
-                        // by showing the user a dialog.
-                        try {
-                            mAreLocationSettingsSatisfied = false;
-                            // Show the dialog by calling startResolutionForResult(),
-                            // and check the result in onActivityResult().
-                            ResolvableApiException resolvable = (ResolvableApiException) e;
-                            resolvable.startResolutionForResult((Activity) mListenerGClient,
-                                    REQUEST_CHECK_SETTINGS);
-                        } catch (IntentSender.SendIntentException sendEx) {
-                            // Ignore the error.
+            public void onLocationAvailability(LocationAvailability locationAvailability) {
+                boolean isLocationAvailable = locationAvailability.isLocationAvailable();
+                if (isLocationAvailable)
+                    mListenerGClient.onLocationAvailabilityChanged(ConnectionState.CONNECTED);
+                else
+                    mListenerGClient.onLocationAvailabilityChanged(ConnectionState.DISCONNECTED);
+            }
+        };
+    }
+
+    /**
+     * Uses a {@link com.google.android.gms.location.LocationSettingsRequest.Builder} to build
+     * a {@link com.google.android.gms.location.LocationSettingsRequest} that is used for checking
+     * if a device has the needed location settings.
+     */
+    private void buildLocationSettingsRequest() {
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+        builder.addLocationRequest(mLocationRequest);
+        mLocationSettingsRequest = builder.build();
+    }
+
+    /**
+     * Requests location updates from the FusedLocationApi. Note: we don't call this unless location
+     * runtime permission has been granted.
+     */
+    private void startLocationUpdates() {
+        // Begin by checking if the device has the necessary location settings.
+        mSettingsClient.checkLocationSettings(mLocationSettingsRequest)
+                .addOnSuccessListener((Activity) mListenerGClient, new OnSuccessListener<LocationSettingsResponse>() {
+                    @Override
+                    public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
+                        Log.i(TAG, "All location settings are satisfied.");
+
+                        //noinspection MissingPermission
+                        if (ActivityCompat.checkSelfPermission((Context) mListenerGClient, Manifest.permission.ACCESS_FINE_LOCATION)
+                                != PackageManager.PERMISSION_GRANTED &&
+                                ActivityCompat.checkSelfPermission((Context) mListenerGClient, Manifest.permission.ACCESS_COARSE_LOCATION)
+                                        != PackageManager.PERMISSION_GRANTED) {
+                            return;
                         }
-                        break;
-                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                        // Location settings are not satisfied. However, we have no way
-                        // to fix the settings so we won't show the dialog.
-                        break;
-                }
-            }
-        });
+                        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                                mLocationCallback, Looper.myLooper());
+
+                    }
+                })
+                .addOnFailureListener((Activity) mListenerGClient, new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        int statusCode = ((ApiException) e).getStatusCode();
+                        switch (statusCode) {
+                            case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                                Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade " +
+                                        "location settings ");
+                                try {
+                                    // Show the dialog by calling startResolutionForResult(), and check the
+                                    // result in onActivityResult().
+                                    ResolvableApiException rae = (ResolvableApiException) e;
+                                    rae.startResolutionForResult((Activity) mListenerGClient, REQUEST_CHECK_SETTINGS);
+                                } catch (IntentSender.SendIntentException sie) {
+                                    Log.i(TAG, "PendingIntent unable to execute request.");
+                                }
+                                break;
+                            case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                                String errorMessage = "Location settings are inadequate, and cannot be " +
+                                        "fixed here. Fix in Settings.";
+                                Log.e(TAG, errorMessage);
+                                Toast.makeText((Context) mListenerGClient, errorMessage, Toast.LENGTH_LONG).show();
+                        }
+
+                    }
+                });
     }
 
 }

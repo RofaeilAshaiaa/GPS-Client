@@ -116,19 +116,19 @@ interface APIMethods {
 
     boolean deactivateLibrary();
 
-    /**
-     * try to reconnect to google location service
-     */
-    void reconnect();
-
-    /**
-     * connect to google location service
-     */
-    void connect();
-
-    /**
-     * disconnect from google location service
-     */
-    void disconnect();
+//    /**
+//     * try to reconnect to google location service
+//     */
+//    void reconnect();
+//
+//    /**
+//     * connect to google location service
+//     */
+//    void connect();
+//
+//    /**
+//     * disconnect from google location service
+//     */
+//    void disconnect();
 
 }
