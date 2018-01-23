@@ -29,47 +29,47 @@ public class ExampleInstrumentedTest {
 
         assertEquals("com.example.gclientlib.test", appContext.getPackageName());
 
-        G guser = new G(new LocationListenerGClient() {
-            @Override
-            public void newLocationUpdateReceived(Location location) {
-
-            }
-
-            @Override
-            public void onLocationAvailabilityChanged(ConnectionState state) {
-
-            }
-        });
-
-        guser.setLocationUpdatesFrequency(20_000);
-        assertEquals(20_000, guser.getLocationUpdatesFrequency());
-
-        guser.setLocationUpdatesSourceProvider(LocationManager.NETWORK_PROVIDER);
-        assertEquals(LocationManager.NETWORK_PROVIDER, guser.getLocationUpdatesSourceProvider());
-
-        guser.setThresholdRadius(30);
-        assertEquals(30, guser.getThresholdRadius());
-
-        guser.startLocationMonitoring();
-        assertTrue(guser.isClientMonitoringLocation());
-        guser.stopLocationMonitoring();
-        assertFalse(guser.isClientMonitoringLocation());
-
-        guser.startMonitoringInBackground();
-        assertTrue(guser.isClientMonitoringInBackground());
-        guser.stopMonitoringInBackground();
-        assertFalse(guser.isClientMonitoringInBackground());
-
-        guser.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        assertEquals(LocationRequest.PRIORITY_HIGH_ACCURACY, guser.getPriority());
-
-        guser.setThresholdTime(20);
-        assertEquals(20, guser.getThresholdTime());
-
-        assertTrue(guser.activateLibrary());
-        assertFalse(guser.deactivateLibrary());
-
-        guser.setFastestInterval(100);
-        assertEquals(100, guser.getFastestInterval());
+//        G guser = new G(new LocationListenerGClient() {
+//            @Override
+//            public void newLocationUpdateReceived(Location location) {
+//
+//            }
+//
+//            @Override
+//            public void onLocationAvailabilityChanged(ConnectionState state) {
+//
+//            }
+//        });
+//
+//        guser.setLocationUpdatesFrequency(20_000);
+//        assertEquals(20_000, guser.getLocationUpdatesFrequency());
+//
+//        guser.setLocationUpdatesSourceProvider(LocationManager.NETWORK_PROVIDER);
+//        assertEquals(LocationManager.NETWORK_PROVIDER, guser.getLocationUpdatesSourceProvider());
+//
+//        guser.setThresholdRadius(30);
+//        assertEquals(30, guser.getThresholdRadius());
+//
+//        guser.startLocationMonitoring();
+//        assertTrue(guser.isClientMonitoringLocation());
+//        guser.stopLocationMonitoring();
+//        assertFalse(guser.isClientMonitoringLocation());
+//
+//        guser.startMonitoringInBackground();
+//        assertTrue(guser.isClientMonitoringInBackground());
+//        guser.stopMonitoringInBackground();
+//        assertFalse(guser.isClientMonitoringInBackground());
+//
+//        guser.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+//        assertEquals(LocationRequest.PRIORITY_HIGH_ACCURACY, guser.getPriority());
+//
+//        guser.setThresholdTime(20);
+//        assertEquals(20, guser.getThresholdTime());
+//
+//        assertTrue(guser.activateLibrary());
+//        assertFalse(guser.deactivateLibrary());
+//
+//        guser.setFastestInterval(100);
+//        assertEquals(100, guser.getFastestInterval());
     }
 }
