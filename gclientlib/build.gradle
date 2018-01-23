@@ -22,6 +22,11 @@ android {
         }
     }
 
+    packagingOptions {
+        pickFirst 'protobuf.meta'
+        exclude 'META-INF/DEPENDENCIES'
+    }
+
 }
 
 dependencies {

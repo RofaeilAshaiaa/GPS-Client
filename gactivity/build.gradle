@@ -20,6 +20,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    packagingOptions {
+        pickFirst 'protobuf.meta'
+        exclude 'META-INF/DEPENDENCIES'
+
+    }
+
 }
 
 dependencies {
