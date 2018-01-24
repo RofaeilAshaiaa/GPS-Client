@@ -122,7 +122,6 @@ public class G implements APIMethods {
     private Location mCurrentLocation;
 
 
-
     public G(final LocationListenerGClient listenerGClient) {
 
         this.mListenerGClient = listenerGClient;
@@ -176,12 +175,13 @@ public class G implements APIMethods {
     public void setLocationUpdatesFrequency(long timeInSeconds) {
         mLocationUpdateIntervalSeconds = timeInSeconds;
         mLocationUpdateIntervalMilliseconds = timeInSeconds * 1_000;
-        // construct the location request with the new parameters
-        createLocationRequest();
-        buildLocationSettingsRequest();
         //start location monitoring with the new settings
-        if (mIsLibraryActivated && (mMonitoring || mMonitoringInBackground))
+        if (mIsLibraryActivated && (mMonitoring || mMonitoringInBackground)) {
+            // construct the location request with the new parameters
+            createLocationRequest();
+            buildLocationSettingsRequest();
             startLocationMonitoring();
+        }
     }
 
     @Override
@@ -239,12 +239,13 @@ public class G implements APIMethods {
         mFastestLocationUpdateIntervalSeconds = timeSeconds;
         mFastestLocationUpdateIntervalMilliseconds = timeSeconds * 1_000;
 
-        // construct the location request with the new parameters
-        createLocationRequest();
-        buildLocationSettingsRequest();
         //start location monitoring with the new settings
-        if (mIsLibraryActivated && (mMonitoring || mMonitoringInBackground))
+        if (mIsLibraryActivated && (mMonitoring || mMonitoringInBackground)) {
+            // construct the location request with the new parameters
+            createLocationRequest();
+            buildLocationSettingsRequest();
             startLocationMonitoring();
+        }
     }
 
     @Override
@@ -255,12 +256,13 @@ public class G implements APIMethods {
     @Override
     public void setPriority(int priority) {
         mPriority = priority;
-        // construct the location request with the new parameters
-        createLocationRequest();
-        buildLocationSettingsRequest();
         //start location monitoring with the new settings
-        if (mIsLibraryActivated && (mMonitoring || mMonitoringInBackground))
+        if (mIsLibraryActivated && (mMonitoring || mMonitoringInBackground)) {
+            // construct the location request with the new parameters
+            createLocationRequest();
+            buildLocationSettingsRequest();
             startLocationMonitoring();
+        }
     }
 
     /**
