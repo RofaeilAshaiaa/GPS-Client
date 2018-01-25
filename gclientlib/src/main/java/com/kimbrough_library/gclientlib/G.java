@@ -1,4 +1,4 @@
-package com.example.gclientlib;
+package com.kimbrough_library.gclientlib;
 
 import android.Manifest;
 import android.app.Activity;
@@ -125,10 +125,11 @@ public class G implements APIMethods {
     public G(final LocationListenerGClient listenerGClient) {
 
         this.mListenerGClient = listenerGClient;
+
     }
 
     @Override
-    public boolean activateLibrary() {
+    public void activateLibrary() {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient((Activity) mListenerGClient);
         mSettingsClient = LocationServices.getSettingsClient((Activity) mListenerGClient);
         // Kick off the process of building the LocationCallback, LocationRequest, and
@@ -137,14 +138,20 @@ public class G implements APIMethods {
         createLocationRequest();
         buildLocationSettingsRequest();
         mIsLibraryActivated = true;
+        //
         startLocationMonitoring();
-        return mIsLibraryActivated;
+        mListenerGClient.onLibraryStateChanged();
     }
 
     @Override
-    public boolean deactivateLibrary() {
+    public void deactivateLibrary() {
         mIsLibraryActivated = false;
         stopLocationMonitoring();
+        mListenerGClient.onLibraryStateChanged();
+    }
+
+    @Override
+    public boolean isLibraryActivated() {
         return mIsLibraryActivated;
     }
 
@@ -152,13 +159,14 @@ public class G implements APIMethods {
     public void startLocationMonitoring() {
         startLocationUpdates();
         mMonitoring = true;
+        mListenerGClient.onMonitoringStateChanged();
     }
 
     @Override
     public void stopLocationMonitoring() {
         mFusedLocationClient.removeLocationUpdates(mLocationCallback);
         mMonitoring = false;
-
+        mListenerGClient.onMonitoringStateChanged();
     }
 
     @Override
@@ -239,13 +247,13 @@ public class G implements APIMethods {
         mFastestLocationUpdateIntervalSeconds = timeSeconds;
         mFastestLocationUpdateIntervalMilliseconds = timeSeconds * 1_000;
 
-        //start location monitoring with the new settings
-        if (mIsLibraryActivated && (mMonitoring || mMonitoringInBackground)) {
-            // construct the location request with the new parameters
-            createLocationRequest();
-            buildLocationSettingsRequest();
-            startLocationMonitoring();
-        }
+//        //start location monitoring with the new settings
+//        if (mIsLibraryActivated && (mMonitoring || mMonitoringInBackground)) {
+//            // construct the location request with the new parameters
+//            createLocationRequest();
+//            buildLocationSettingsRequest();
+//            startLocationMonitoring();
+//        }
     }
 
     @Override
@@ -305,7 +313,7 @@ public class G implements APIMethods {
 
                 mCurrentLocation = locationResult.getLastLocation();
                 mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-                mListenerGClient.newLocationUpdateReceived(mCurrentLocation);
+                mListenerGClient.newLocationUpdateReceived(mCurrentLocation, mLastUpdateTime);
             }
 
             @Override

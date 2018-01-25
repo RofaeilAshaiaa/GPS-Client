@@ -1,4 +1,4 @@
-package com.example.gclientlib;
+package com.kimbrough_library.gclientlib;
 
 /**
  * @author Rofaeil Ashaiaa
@@ -112,9 +112,11 @@ interface APIMethods {
      */
     void setPriority(int priority);
 
-    boolean activateLibrary();
+    void activateLibrary();
 
-    boolean deactivateLibrary();
+    void deactivateLibrary();
+
+    boolean isLibraryActivated();
 
 //    /**
 //     * try to reconnect to google location service

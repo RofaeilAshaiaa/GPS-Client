@@ -1,6 +1,4 @@
-package com.example.gclientlib;
-
-import android.location.LocationManager;
+package com.kimbrough_library.gclientlib;
 
 import org.junit.Test;
 

@@ -1,4 +1,4 @@
-package com.example.gclientlib;
+package com.kimbrough_library.gclientlib;
 
 /**
  * @author Rofaeil Ashaiaa

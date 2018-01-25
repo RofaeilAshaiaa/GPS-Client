@@ -1,4 +1,4 @@
-package com.example.gclientlib;
+package com.kimbrough_library.gclientlib;
 
 import android.location.Location;
 
@@ -9,8 +9,12 @@ import android.location.Location;
 
 public interface LocationListenerGClient {
 
-    void newLocationUpdateReceived(Location location);
+    void newLocationUpdateReceived(Location location, String mLastUpdateTime);
 
     void onLocationAvailabilityChanged(ConnectionState state);
+
+    void onLibraryStateChanged();
+
+    void onMonitoringStateChanged();
 
 }

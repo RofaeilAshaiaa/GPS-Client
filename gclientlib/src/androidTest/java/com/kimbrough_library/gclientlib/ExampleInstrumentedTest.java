@@ -1,4 +1,4 @@
-package com.example.gclientlib;
+package com.kimbrough_library.gclientlib;
 
 import android.content.Context;
 import android.location.Location;
@@ -28,11 +28,11 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.example.gclientlib.test", appContext.getPackageName());
+        assertEquals("com.kimbrough.g.gclientlib.test", appContext.getPackageName());
 
         G guser = new G(new LocationListenerGClient() {
             @Override
-            public void newLocationUpdateReceived(Location location) {
+            public void newLocationUpdateReceived(Location location, String mLastUpdateTime) {
 
             }
 
