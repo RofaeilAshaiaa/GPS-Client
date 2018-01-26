@@ -1,4 +1,4 @@
-package com.kimbrough_library.gclientlib;
+package com.kimbrough.gclientlib;
 
 import android.location.Location;
 

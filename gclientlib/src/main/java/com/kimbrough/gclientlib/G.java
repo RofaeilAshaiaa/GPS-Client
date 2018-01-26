@@ -1,4 +1,4 @@
-package com.kimbrough_library.gclientlib;
+package com.kimbrough.gclientlib;
 
 import android.Manifest;
 import android.app.Activity;
@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -78,7 +79,10 @@ public class G implements APIMethods {
      * desired fastest interval for location updates in seconds
      */
     private int mFastestLocationUpdateIntervalSeconds;
-    private int mThresholdTime;
+    /**
+     * determining threshold time which will be used to set up a timer
+     */
+    private int mThresholdTime = 10;
     /**
      * Time when the location was updated represented as a String.
      */
@@ -91,10 +95,6 @@ public class G implements APIMethods {
      * mListenerGClient to receive location updates from our library
      */
     private LocationListenerGClient mListenerGClient;
-    /**
-     * determine whether the Location Settings are Satisfied or not
-     */
-    private boolean mAreLocationSettingsSatisfied;
     /**
      * Provides access to the Fused Location Provider API.
      */
@@ -119,7 +119,17 @@ public class G implements APIMethods {
     /**
      * Represents a geographical location.
      */
-    private Location mCurrentLocation;
+    private Location mCurrentLocation = null;
+    /**
+     * new location received
+     */
+    private Location mNewLocation = null;
+    /**
+     * state of current seconds in the timer
+     */
+    private int mTimer;
+    private Handler mHandler;
+    private Runnable mRunnable;
 
 
     public G(final LocationListenerGClient listenerGClient) {
@@ -147,6 +157,7 @@ public class G implements APIMethods {
     public void deactivateLibrary() {
         mIsLibraryActivated = false;
         stopLocationMonitoring();
+        stopTimer();
         mListenerGClient.onLibraryStateChanged();
     }
 
@@ -308,12 +319,33 @@ public class G implements APIMethods {
     private void createLocationCallback() {
         mLocationCallback = new LocationCallback() {
             @Override
-            public void onLocationResult(LocationResult locationResult) {
+            public void onLocationResult(final LocationResult locationResult) {
                 super.onLocationResult(locationResult);
 
-                mCurrentLocation = locationResult.getLastLocation();
-                mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-                mListenerGClient.newLocationUpdateReceived(mCurrentLocation, mLastUpdateTime);
+                if (mCurrentLocation == null) {
+                    //this means this is the first location we received
+                    mCurrentLocation = locationResult.getLastLocation();
+                    sendLocationAndTime();
+                    createHandlerAndRunnable();
+                    resetTimer();
+                } else {
+                    //we already received a previous location,
+                    //we need to make sure that the new location should be broad-casted or not
+                    mNewLocation = locationResult.getLastLocation();
+                    double distance = Utils.distanceInKmBetweenEarthCoordinates(
+                            mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude(),
+                            mNewLocation.getLatitude(), mNewLocation.getLongitude());
+
+                    if (distance > mThresholdRadius) {
+                        // this means that the client have moved out of the radius we determined
+                        mCurrentLocation = mNewLocation;
+                        sendLocationAndTime();
+                        resetTimer();
+                    } else {
+                        //shows silent consuming of ticks with toast
+                        Toast.makeText((Context) mListenerGClient, "New Tick Consumed Silently", Toast.LENGTH_LONG).show();
+                    }
+                }
             }
 
             @Override
@@ -325,6 +357,43 @@ public class G implements APIMethods {
                     mListenerGClient.onLocationAvailabilityChanged(ConnectionState.DISCONNECTED);
             }
         };
+    }
+
+    private void resetTimer() {
+        mHandler.removeCallbacks(mRunnable);
+        mTimer = 0;
+        mHandler.postDelayed(mRunnable, 1_000);
+    }
+
+    private void stopTimer() {
+        mHandler.removeCallbacks(mRunnable);
+        mTimer = 0;
+    }
+
+
+    private void createHandlerAndRunnable() {
+        mHandler = new Handler();
+        mRunnable = new Runnable() {
+            @Override
+            public void run() {
+                // if the we reached the threshold time we should
+                // send the location and reset the timer
+                if (mTimer == mThresholdTime) {
+                    mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+                    mListenerGClient.newLocationUpdateReceived(mCurrentLocation, mLastUpdateTime);
+                    resetTimer();
+                } else {
+                    // we should increase the timer by 1 and run it after 1 second
+                    mTimer++;
+                    mHandler.postDelayed(this, 1_000);
+                }
+            }
+        };
+    }
+
+    private void sendLocationAndTime() {
+        mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+        mListenerGClient.newLocationUpdateReceived(mCurrentLocation, mLastUpdateTime);
     }
 
     /**
