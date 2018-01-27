@@ -1,9 +1,7 @@
-package com.kimbrough_library.gclientlib;
+package com.kimbrough.gclientlib;
 
-import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.google.android.gms.location.LocationRequest;
@@ -25,10 +23,6 @@ import static org.junit.Assert.assertTrue;
 public class ExampleInstrumentedTest {
     @Test
     public void useAppContext() throws Exception {
-        // Context of the app under test.
-        Context appContext = InstrumentationRegistry.getTargetContext();
-
-        assertEquals("com.kimbrough.g.gclientlib.test", appContext.getPackageName());
 
         G guser = new G(new LocationListenerGClient() {
             @Override
@@ -38,6 +32,16 @@ public class ExampleInstrumentedTest {
 
             @Override
             public void onLocationAvailabilityChanged(ConnectionState state) {
+
+            }
+
+            @Override
+            public void onLibraryStateChanged() {
+
+            }
+
+            @Override
+            public void onMonitoringStateChanged() {
 
             }
         });

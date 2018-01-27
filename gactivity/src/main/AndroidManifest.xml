@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.kimbrough.gactivity">
+    package="com.kimbrough_app.gactivity">
 
     <application
         android:allowBackup="true"
@@ -10,19 +10,19 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".Gactivity"
+            android:name="com.kimbrough_app.gactivity.Gactivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
 
         </activity>
 
         <service
-            android:name=".GeofenceService"
+            android:name="com.kimbrough_app.gactivity.GeofenceService"
             android:enabled="true"
             android:exported="true" />
 
         <activity
-            android:name=".MainActivity"
+            android:name="com.kimbrough_app.gactivity.MainActivity"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

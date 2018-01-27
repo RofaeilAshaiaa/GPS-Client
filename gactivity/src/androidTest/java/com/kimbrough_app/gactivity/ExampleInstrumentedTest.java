@@ -1,4 +1,4 @@
-package com.kimbrough.gactivity;
+package com.kimbrough_app.gactivity;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

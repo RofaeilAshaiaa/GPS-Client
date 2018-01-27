@@ -1,4 +1,4 @@
-package com.kimbrough.gactivity;
+package com.kimbrough_app.gactivity;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -12,10 +12,10 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Toast;
 
-import com.kimbrough_library.gclientlib.ConnectionState;
-import com.kimbrough_library.gclientlib.G;
-import com.kimbrough_library.gclientlib.LocationListenerGClient;
-import com.kimbrough.gactivity.databinding.ActivityMainBinding;
+import com.kimbrough.gclientlib.ConnectionState;
+import com.kimbrough.gclientlib.G;
+import com.kimbrough.gclientlib.LocationListenerGClient;
+import com.kimbrough_app.gactivity.databinding.ActivityMainBinding;
 
 import static com.google.android.gms.location.LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY;
 import static com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY;
@@ -23,6 +23,7 @@ import static com.google.android.gms.location.LocationRequest.PRIORITY_LOW_POWER
 import static com.google.android.gms.location.LocationRequest.PRIORITY_NO_POWER;
 
 public class MainActivity extends AppCompatActivity implements LocationListenerGClient {
+
     private static final String TAG = MainActivity.class.getSimpleName();
     /**
      * Code used in requesting runtime permissions.
@@ -121,6 +122,8 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
             }
         });
         mLocationManager = new G(this);
+
+        mLocationManager.setThresholdRadius(5_000);
 
     }
 
