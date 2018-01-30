@@ -123,14 +123,14 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
         });
         mLocationManager = new G(this);
 
-        mLocationManager.setThresholdRadius(5_000);
+        mLocationManager.setThresholdRadius(500);
 
     }
 
     @Override
-    public void newLocationUpdateReceived(Location location, String mLastUpdateTime) {
+    public void deliverNewLocationUpdate(Location location, String mLastUpdateTime) {
 
-        String value = "lat: " + location.getLatitude()
+        String value = "Broadcasted: lat: " + location.getLatitude()
                 + ", long: " + location.getLongitude()
                 + ", " + mLastUpdateTime;
 
@@ -140,10 +140,10 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
     @Override
     public void onLocationAvailabilityChanged(ConnectionState state) {
         if (state == ConnectionState.CONNECTED) {
-            mMainBinding.areLocationUpdatesAvalible.setText("are Location Updates Available: Yes");
+            mMainBinding.areLocationUpdatesAvalible.setText("Is Client Connected: Yes");
 
-        } else {
-            mMainBinding.areLocationUpdatesAvalible.setText("are Location Updates Available: No");
+        } else if (state == ConnectionState.DISCONNECTED) {
+            mMainBinding.areLocationUpdatesAvalible.setText("Is Client Connected: No");
         }
     }
 
@@ -163,6 +163,15 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
         } else {
             mMainBinding.areWeMointoringForLocationUpdates.setText("are We Monitoring For Location Updates: No");
         }
+    }
+
+    @Override
+    public void deliverSilentTick(Location location, String lastUpdateTime) {
+
+        String value = "Silent Tick: lat: " + location.getLatitude()
+                + ", long: " + location.getLongitude()
+                + ", " + lastUpdateTime;
+        mMainBinding.silentTicks.setText(value);
     }
 
     /**

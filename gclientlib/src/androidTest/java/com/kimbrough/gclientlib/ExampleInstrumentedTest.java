@@ -26,7 +26,7 @@ public class ExampleInstrumentedTest {
 
         G guser = new G(new LocationListenerGClient() {
             @Override
-            public void newLocationUpdateReceived(Location location, String mLastUpdateTime) {
+            public void deliverNewLocationUpdate(Location location, String mLastUpdateTime) {
 
             }
 
@@ -42,6 +42,11 @@ public class ExampleInstrumentedTest {
 
             @Override
             public void onMonitoringStateChanged() {
+
+            }
+
+            @Override
+            public void deliverSilentTick(Location location, String lastUpdateTime) {
 
             }
         });

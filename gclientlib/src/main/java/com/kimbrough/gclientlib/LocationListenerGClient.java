@@ -9,12 +9,14 @@ import android.location.Location;
 
 public interface LocationListenerGClient {
 
-    void newLocationUpdateReceived(Location location, String mLastUpdateTime);
+    void deliverNewLocationUpdate(Location location, String mLastUpdateTime);
 
     void onLocationAvailabilityChanged(ConnectionState state);
 
     void onLibraryStateChanged();
 
     void onMonitoringStateChanged();
+
+    void deliverSilentTick(Location location, String lastUpdateTime);
 
 }

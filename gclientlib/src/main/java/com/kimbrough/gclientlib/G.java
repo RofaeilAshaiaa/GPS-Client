@@ -29,7 +29,9 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author Rofaeil Ashaiaa
@@ -130,12 +132,15 @@ public class G implements APIMethods {
     private int mTimer;
     private Handler mHandler;
     private Runnable mRunnable;
+    // list of locations until we rest the timer
+    private ArrayList<Location> mLocationArrayList;
 
 
     public G(final LocationListenerGClient listenerGClient) {
 
         this.mListenerGClient = listenerGClient;
 
+        mLocationArrayList = new ArrayList<>();
     }
 
     @Override
@@ -325,6 +330,7 @@ public class G implements APIMethods {
                 if (mCurrentLocation == null) {
                     //this means this is the first location we received
                     mCurrentLocation = locationResult.getLastLocation();
+                    mLocationArrayList.add(mCurrentLocation);
                     sendLocationAndTime();
                     createHandlerAndRunnable();
                     resetTimer();
@@ -335,6 +341,7 @@ public class G implements APIMethods {
                     double distance = Utils.distanceInKmBetweenEarthCoordinates(
                             mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude(),
                             mNewLocation.getLatitude(), mNewLocation.getLongitude());
+                    mLocationArrayList.add(mNewLocation);
 
                     if (distance > mThresholdRadius) {
                         // this means that the client have moved out of the radius we determined
@@ -342,8 +349,12 @@ public class G implements APIMethods {
                         sendLocationAndTime();
                         resetTimer();
                     } else {
-                        //shows silent consuming of ticks with toast
-                        Toast.makeText((Context) mListenerGClient, "New Tick Consumed Silently", Toast.LENGTH_LONG).show();
+//                        Toast.makeText((Context) mListenerGClient, "New Tick Consumed Silently", Toast.LENGTH_LONG).show();
+
+                        //deliver silent consuming of ticks
+                        mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+                        mListenerGClient.deliverSilentTick(mNewLocation, mLastUpdateTime);
+
                     }
                 }
             }
@@ -363,6 +374,7 @@ public class G implements APIMethods {
         mHandler.removeCallbacks(mRunnable);
         mTimer = 0;
         mHandler.postDelayed(mRunnable, 1_000);
+        mLocationArrayList.clear();
     }
 
     private void stopTimer() {
@@ -380,7 +392,7 @@ public class G implements APIMethods {
                 // send the location and reset the timer
                 if (mTimer == mThresholdTime) {
                     mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-                    mListenerGClient.newLocationUpdateReceived(mCurrentLocation, mLastUpdateTime);
+                    mListenerGClient.deliverNewLocationUpdate(mCurrentLocation, mLastUpdateTime);
                     resetTimer();
                 } else {
                     // we should increase the timer by 1 and run it after 1 second
@@ -393,7 +405,7 @@ public class G implements APIMethods {
 
     private void sendLocationAndTime() {
         mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-        mListenerGClient.newLocationUpdateReceived(mCurrentLocation, mLastUpdateTime);
+        mListenerGClient.deliverNewLocationUpdate(mCurrentLocation, mLastUpdateTime);
     }
 
     /**

@@ -94,6 +94,8 @@
                 android:id="@+id/isLibraryActivated"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
                 android:layout_marginTop="24dp"
                 android:text="isLibraryActivated"
                 android:textSize="18sp"
@@ -105,11 +107,13 @@
                 android:id="@+id/areWeMointoringForLocationUpdates"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
                 android:layout_marginTop="16dp"
                 android:text="areWeMointoringForLocationUpdates"
                 android:textSize="18sp"
-                app:layout_constraintEnd_toEndOf="@+id/isLibraryActivated"
-                app:layout_constraintStart_toStartOf="@+id/isLibraryActivated"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/isLibraryActivated" />
 
             <TextView
@@ -141,10 +145,11 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:layout_marginTop="24dp"
-                android:text="Last Known Location"
+                android:text="Broadcasted Location"
                 android:textSize="18sp"
-                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintBottom_toTopOf="@+id/silentTicks"
                 app:layout_constraintEnd_toEndOf="@+id/textView8"
+                app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="@+id/textView8"
                 app:layout_constraintTop_toBottomOf="@+id/textView8" />
 
@@ -180,6 +185,22 @@
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toEndOf="@+id/locationUpdatesInterval"
                 app:layout_constraintTop_toTopOf="@+id/locationUpdatesInterval" />
+
+            <TextView
+                android:id="@+id/silentTicks"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:text="Silent Ticks"
+                android:textSize="18sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="@+id/lastKnownLocation"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="@+id/lastKnownLocation"
+                app:layout_constraintTop_toBottomOf="@+id/lastKnownLocation" />
 
         </android.support.constraint.ConstraintLayout>
     </android.support.v4.widget.NestedScrollView>
