@@ -31,7 +31,8 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+
+import static com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY;
 
 /**
  * @author Rofaeil Ashaiaa
@@ -48,11 +49,11 @@ public class G implements APIMethods {
     /**
      * desired interval for location Update interval in milliseconds
      */
-    private long mLocationUpdateIntervalMilliseconds;
+    private long mLocationUpdateIntervalMilliseconds = 1_000;
     /**
      * desired interval for location updates in seconds
      */
-    private long mLocationUpdateIntervalSeconds;
+    private long mLocationUpdateIntervalSeconds = 1;
     /**
      * determine whether we monitoring for location updates or not
      */
@@ -62,29 +63,25 @@ public class G implements APIMethods {
      */
     private boolean mMonitoringInBackground;
     /**
-     * determining whether to use ACCESS_FINE_LOCATION or ACCESS_COARSE_LOCATION
-     */
-    private String mLocationUpdatesSource;
-    /**
-     * determining threshold radius
-     */
-    private int mThresholdRadius;
-    /**
      * determine the priority of location updates request
      */
-    private int mPriority;
+    private int mPriority = PRIORITY_HIGH_ACCURACY;
     /**
      * desired fastest interval for location updates in milliseconds
      */
-    private int mFastestLocationUpdateIntervalMilliseconds;
+    private int mFastestLocationUpdateIntervalMilliseconds = 1_000;
     /**
      * desired fastest interval for location updates in seconds
      */
-    private int mFastestLocationUpdateIntervalSeconds;
+    private int mFastestLocationUpdateIntervalSeconds = 1;
     /**
      * determining threshold time which will be used to set up a timer
      */
     private int mThresholdTime = 10;
+    /**
+     * determining threshold radius
+     */
+    private int mThresholdRadius;
     /**
      * Time when the location was updated represented as a String.
      */
@@ -126,20 +123,17 @@ public class G implements APIMethods {
      * new location received
      */
     private Location mNewLocation = null;
-    /**
-     * state of current seconds in the timer
-     */
-    private int mTimer;
     private Handler mHandler;
     private Runnable mRunnable;
     // list of locations until we rest the timer
     private ArrayList<Location> mLocationArrayList;
+    //determines whether we are connected and location updates available
+    private ConnectionState mConnectionState;
 
 
     public G(final LocationListenerGClient listenerGClient) {
 
         this.mListenerGClient = listenerGClient;
-
         mLocationArrayList = new ArrayList<>();
     }
 
@@ -186,6 +180,13 @@ public class G implements APIMethods {
     }
 
     @Override
+    public void restartLocationMonitoring() {
+        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
+        buildLocationSettingsRequest();
+        startLocationUpdates();
+    }
+
+    @Override
     public boolean isClientMonitoringLocation() {
         return mMonitoring;
     }
@@ -201,10 +202,9 @@ public class G implements APIMethods {
         mLocationUpdateIntervalMilliseconds = timeInSeconds * 1_000;
         //start location monitoring with the new settings
         if (mIsLibraryActivated && (mMonitoring || mMonitoringInBackground)) {
-            // construct the location request with the new parameters
-            createLocationRequest();
-            buildLocationSettingsRequest();
-            startLocationMonitoring();
+            // restart location monitoring with the new parameters
+            mLocationRequest.setInterval(mLocationUpdateIntervalMilliseconds);
+            restartLocationMonitoring();
         }
     }
 
@@ -221,16 +221,6 @@ public class G implements APIMethods {
     @Override
     public boolean isClientMonitoringInBackground() {
         return mMonitoringInBackground;
-    }
-
-    @Override
-    public String getLocationUpdatesSourceProvider() {
-        return mLocationUpdatesSource;
-    }
-
-    @Override
-    public void setLocationUpdatesSourceProvider(String locationSourceProvider) {
-        mLocationUpdatesSource = locationSourceProvider;
     }
 
     @Override
@@ -263,13 +253,6 @@ public class G implements APIMethods {
         mFastestLocationUpdateIntervalSeconds = timeSeconds;
         mFastestLocationUpdateIntervalMilliseconds = timeSeconds * 1_000;
 
-//        //start location monitoring with the new settings
-//        if (mIsLibraryActivated && (mMonitoring || mMonitoringInBackground)) {
-//            // construct the location request with the new parameters
-//            createLocationRequest();
-//            buildLocationSettingsRequest();
-//            startLocationMonitoring();
-//        }
     }
 
     @Override
@@ -282,10 +265,9 @@ public class G implements APIMethods {
         mPriority = priority;
         //start location monitoring with the new settings
         if (mIsLibraryActivated && (mMonitoring || mMonitoringInBackground)) {
-            // construct the location request with the new parameters
-            createLocationRequest();
-            buildLocationSettingsRequest();
-            startLocationMonitoring();
+            // restart location monitoring with the new parameters
+            mLocationRequest.setPriority(mPriority);
+            restartLocationMonitoring();
         }
     }
 
@@ -333,7 +315,7 @@ public class G implements APIMethods {
                     mLocationArrayList.add(mCurrentLocation);
                     sendLocationAndTime();
                     createHandlerAndRunnable();
-                    resetTimer();
+                    startTimer();
                 } else {
                     //we already received a previous location,
                     //we need to make sure that the new location should be broad-casted or not
@@ -347,14 +329,12 @@ public class G implements APIMethods {
                         // this means that the client have moved out of the radius we determined
                         mCurrentLocation = mNewLocation;
                         sendLocationAndTime();
-                        resetTimer();
+                        stopTimer();
+                        startTimer();
                     } else {
-//                        Toast.makeText((Context) mListenerGClient, "New Tick Consumed Silently", Toast.LENGTH_LONG).show();
-
                         //deliver silent consuming of ticks
                         mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
                         mListenerGClient.deliverSilentTick(mNewLocation, mLastUpdateTime);
-
                     }
                 }
             }
@@ -370,18 +350,20 @@ public class G implements APIMethods {
         };
     }
 
-    private void resetTimer() {
-        mHandler.removeCallbacks(mRunnable);
-        mTimer = 0;
-        mHandler.postDelayed(mRunnable, 1_000);
-        mLocationArrayList.clear();
+    /**
+     * starts the timer with the value of threshold time as seconds
+     */
+    private void startTimer() {
+        mHandler.postDelayed(mRunnable, mThresholdTime * 1000);
     }
 
+    /**
+     * stop the current timer if running and empty the list of locations we have
+     */
     private void stopTimer() {
         mHandler.removeCallbacks(mRunnable);
-        mTimer = 0;
+        mLocationArrayList.clear();
     }
-
 
     private void createHandlerAndRunnable() {
         mHandler = new Handler();
@@ -390,15 +372,10 @@ public class G implements APIMethods {
             public void run() {
                 // if the we reached the threshold time we should
                 // send the location and reset the timer
-                if (mTimer == mThresholdTime) {
-                    mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-                    mListenerGClient.deliverNewLocationUpdate(mCurrentLocation, mLastUpdateTime);
-                    resetTimer();
-                } else {
-                    // we should increase the timer by 1 and run it after 1 second
-                    mTimer++;
-                    mHandler.postDelayed(this, 1_000);
-                }
+                mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+                mListenerGClient.deliverNewLocationUpdate(mCurrentLocation, mLastUpdateTime);
+                mLocationArrayList.add(mCurrentLocation);
+                startTimer();
             }
         };
     }

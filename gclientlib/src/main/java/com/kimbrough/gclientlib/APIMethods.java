@@ -18,6 +18,12 @@ interface APIMethods {
     void stopLocationMonitoring();
 
     /**
+     * stops location monitoring, then start monitoring again with
+     * new location request parameters and settings
+     */
+    void restartLocationMonitoring();
+
+    /**
      * returns whether the client is monitoring for location updates or not
      */
     boolean isClientMonitoringLocation();
@@ -48,21 +54,6 @@ interface APIMethods {
      * returns whether the client is monitoring for location updates in background or not
      */
     boolean isClientMonitoringInBackground();
-
-    /**
-     * gets the location updates provider
-     *
-     * @return a string determining whether to use ACCESS_FINE_LOCATION or ACCESS_COARSE_LOCATION
-     */
-    String getLocationUpdatesSourceProvider();
-
-    /**
-     * determine the source provider of the location whether to receive location
-     * updates from NETWORK_PROVIDER or GPS_PROVIDER
-     *
-     * @param locationSourceProvider a string determining whether to use ACCESS_FINE_LOCATION or ACCESS_COARSE_LOCATION
-     */
-    void setLocationUpdatesSourceProvider(String locationSourceProvider);
 
     /**
      * gets radius of threshold
@@ -117,20 +108,5 @@ interface APIMethods {
     void deactivateLibrary();
 
     boolean isLibraryActivated();
-
-//    /**
-//     * try to reconnect to google location service
-//     */
-//    void reconnect();
-//
-//    /**
-//     * connect to google location service
-//     */
-//    void connect();
-//
-//    /**
-//     * disconnect from google location service
-//     */
-//    void disconnect();
 
 }
