@@ -58,14 +58,14 @@ interface APIMethods {
     /**
      * gets radius of threshold
      */
-    int getThresholdRadius();
+    double getThresholdRadius();
 
     /**
      * sets the radius of threshold distance
      *
      * @param distanceInMeters radius of threshold distance in meters
      */
-    void setThresholdRadius(int distanceInMeters);
+    void setThresholdRadius(double distanceInMeters);
 
     /**
      * gets threshold time

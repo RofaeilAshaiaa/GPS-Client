@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">Gactivity</string>
     <string name="action_settings">Settings</string>
+    <string name="off_label">OFF</string>
+    <string name="on_label">ON</string>
 </resources>

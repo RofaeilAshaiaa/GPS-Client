@@ -81,7 +81,7 @@ public class G implements APIMethods {
     /**
      * determining threshold radius
      */
-    private int mThresholdRadius;
+    private double mThresholdRadius = 500;
     /**
      * Time when the location was updated represented as a String.
      */
@@ -129,6 +129,8 @@ public class G implements APIMethods {
     private ArrayList<Location> mLocationArrayList;
     //determines whether we are connected and location updates available
     private ConnectionState mConnectionState;
+    // determines the difference between new location and the current location
+    private double mDistance = 0;
 
 
     public G(final LocationListenerGClient listenerGClient) {
@@ -224,12 +226,12 @@ public class G implements APIMethods {
     }
 
     @Override
-    public int getThresholdRadius() {
+    public double getThresholdRadius() {
         return mThresholdRadius;
     }
 
     @Override
-    public void setThresholdRadius(int distanceInMeters) {
+    public void setThresholdRadius(double distanceInMeters) {
         mThresholdRadius = distanceInMeters;
     }
 
@@ -313,19 +315,22 @@ public class G implements APIMethods {
                     //this means this is the first location we received
                     mCurrentLocation = locationResult.getLastLocation();
                     mLocationArrayList.add(mCurrentLocation);
+                    //sets the first mDistance with zero value of threshold mDistance
                     sendLocationAndTime();
+                    deliverThetaDistance(mDistance);
+                    deliverThetaTime();
                     createHandlerAndRunnable();
                     startTimer();
                 } else {
                     //we already received a previous location,
                     //we need to make sure that the new location should be broad-casted or not
                     mNewLocation = locationResult.getLastLocation();
-                    double distance = Utils.distanceInKmBetweenEarthCoordinates(
+                    mDistance = Utils.distanceInKmBetweenEarthCoordinates(
                             mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude(),
                             mNewLocation.getLatitude(), mNewLocation.getLongitude());
                     mLocationArrayList.add(mNewLocation);
 
-                    if (distance > mThresholdRadius) {
+                    if (mDistance > mThresholdRadius) {
                         // this means that the client have moved out of the radius we determined
                         mCurrentLocation = mNewLocation;
                         sendLocationAndTime();
@@ -336,7 +341,9 @@ public class G implements APIMethods {
                         mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
                         mListenerGClient.deliverSilentTick(mNewLocation, mLastUpdateTime);
                     }
+                    deliverThetaDistance(mDistance);
                 }
+                deliverThetaTime();
             }
 
             @Override
@@ -348,6 +355,16 @@ public class G implements APIMethods {
                     mListenerGClient.onLocationAvailabilityChanged(ConnectionState.DISCONNECTED);
             }
         };
+    }
+
+    private void deliverThetaDistance(double distance) {
+        mListenerGClient.deliverThetaDistance(distance, mThresholdRadius);
+    }
+
+    private void deliverThetaTime() {
+        //deliver time with zero because we had to revert to previous
+        // implementation of the timer i.e. timer should fires every second
+        mListenerGClient.deliverThetaTime(0, mThresholdTime);
     }
 
     /**
@@ -372,8 +389,9 @@ public class G implements APIMethods {
             public void run() {
                 // if the we reached the threshold time we should
                 // send the location and reset the timer
-                mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-                mListenerGClient.deliverNewLocationUpdate(mCurrentLocation, mLastUpdateTime);
+                sendLocationAndTime();
+                deliverThetaDistance(mDistance);
+                deliverThetaTime();
                 mLocationArrayList.add(mCurrentLocation);
                 startTimer();
             }

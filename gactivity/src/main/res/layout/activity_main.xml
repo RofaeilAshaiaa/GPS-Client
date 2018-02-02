@@ -13,56 +13,117 @@
             android:layout_height="match_parent">
 
             <TextView
-                android:id="@+id/textView"
-                android:layout_width="0dp"
+                android:id="@+id/thetaTimeLabel"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
-                android:layout_marginTop="24dp"
-                android:text="Location Updates Interval"
+                android:text="TT:"
+                android:textSize="18sp"
+                app:layout_constraintBottom_toBottomOf="@+id/thetaTimeValue"
+                app:layout_constraintEnd_toStartOf="@+id/thetaTimeValue"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/thetaCircValue"
+                app:layout_constraintTop_toTopOf="@+id/thetaTimeValue" />
+
+            <TextView
+                android:id="@+id/thetaTimeValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="TT"
                 android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_chainStyle="spread"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/thetaTimeLabel"
+                app:layout_constraintTop_toBottomOf="@+id/areLocationUpdatesAvalible" />
+
+            <TextView
+                android:id="@+id/textView6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="THD"
+                app:layout_constraintEnd_toStartOf="@+id/thersholdDistanceEditText"
+                app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView3" />
+                app:layout_constraintTop_toTopOf="@+id/thersholdDistanceEditText" />
+
+            <EditText
+                android:id="@+id/thersholdDistanceEditText"
+                android:layout_width="wrap_content"
+                android:layout_height="37dp"
+                android:layout_marginTop="8dp"
+                android:ems="10"
+                android:hint="Threshold Distance"
+                android:inputType="textPersonName"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toStartOf="@+id/changeThreholdDistance"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/textView6"
+                app:layout_constraintTop_toBottomOf="@+id/thersholdTimeEditText" />
+
+            <Button
+                android:id="@+id/changeThreholdDistance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Change"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/thersholdDistanceEditText"
+                app:layout_constraintTop_toTopOf="@+id/thersholdDistanceEditText" />
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="UIF"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toStartOf="@+id/locationUpdatesInterval"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintHorizontal_chainStyle="spread_inside"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/locationUpdatesInterval" />
 
             <EditText
                 android:id="@+id/locationUpdatesInterval"
                 android:layout_width="100dp"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
                 android:layout_marginTop="8dp"
                 android:ems="10"
+                android:hint="update interval"
                 android:inputType="number"
+                android:textSize="14sp"
                 app:layout_constraintEnd_toStartOf="@+id/changeUpdateFrequency"
                 app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView" />
+                app:layout_constraintStart_toEndOf="@+id/textView"
+                app:layout_constraintTop_toBottomOf="@+id/textView3" />
 
             <Spinner
                 android:id="@+id/prioritySpinner"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:entries="@array/priorities"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView2" />
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/textView2"
+                app:layout_constraintTop_toBottomOf="@+id/locationUpdatesInterval" />
 
             <TextView
                 android:id="@+id/textView2"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="8dp"
-                android:text="Location Priority"
-                android:textSize="18sp"
-                app:layout_constraintEnd_toEndOf="parent"
+                android:text="Priority"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toStartOf="@+id/prioritySpinner"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/locationUpdatesInterval" />
+                app:layout_constraintTop_toTopOf="@+id/prioritySpinner" />
 
             <TextView
                 android:id="@+id/textView3"
@@ -70,9 +131,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
-                android:layout_marginTop="16dp"
                 android:text="Control and Parameters"
-                android:textSize="24sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -82,9 +142,9 @@
                 android:id="@+id/textView4"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="40dp"
+                android:layout_marginTop="16dp"
                 android:text="Lbrary States"
-                android:textSize="24sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -94,93 +154,127 @@
                 android:id="@+id/isLibraryActivated"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="24dp"
-                android:text="isLibraryActivated"
+                android:text="LA"
                 android:textSize="18sp"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="@+id/areWeMointoringForLocationUpdatesLabel"
+                app:layout_constraintEnd_toStartOf="@+id/areWeMointoringForLocationUpdatesLabel"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/isLibraryActivatedLabel"
+                app:layout_constraintTop_toTopOf="@+id/areWeMointoringForLocationUpdatesLabel" />
+
+            <TextView
+                android:id="@+id/isLibraryActivatedLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="LA:"
+                android:textSize="18sp"
+                app:layout_constraintBottom_toBottomOf="@+id/isLibraryActivated"
+                app:layout_constraintEnd_toStartOf="@+id/isLibraryActivated"
+                app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView4" />
+                app:layout_constraintTop_toTopOf="@+id/isLibraryActivated" />
 
             <TextView
                 android:id="@+id/areWeMointoringForLocationUpdates"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="16dp"
-                android:text="areWeMointoringForLocationUpdates"
+                android:text="M"
                 android:textSize="18sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/isLibraryActivated" />
+                app:layout_constraintBottom_toBottomOf="@+id/areLocationUpdatesAvalible4"
+                app:layout_constraintEnd_toStartOf="@+id/areLocationUpdatesAvalible4"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/areWeMointoringForLocationUpdatesLabel"
+                app:layout_constraintTop_toTopOf="@+id/areLocationUpdatesAvalible4" />
+
+            <TextView
+                android:id="@+id/areWeMointoringForLocationUpdatesLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="M:"
+                android:textSize="18sp"
+                app:layout_constraintBottom_toBottomOf="@+id/areWeMointoringForLocationUpdates"
+                app:layout_constraintEnd_toStartOf="@+id/areWeMointoringForLocationUpdates"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/isLibraryActivated"
+                app:layout_constraintTop_toTopOf="@+id/areWeMointoringForLocationUpdates" />
+
+            <TextView
+                android:id="@+id/areLocationUpdatesAvalible4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="UA:"
+                android:textSize="18sp"
+                app:layout_constraintBottom_toBottomOf="@+id/areLocationUpdatesAvalible"
+                app:layout_constraintEnd_toStartOf="@+id/areLocationUpdatesAvalible"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/areWeMointoringForLocationUpdates"
+                app:layout_constraintTop_toTopOf="@+id/areLocationUpdatesAvalible" />
 
             <TextView
                 android:id="@+id/areLocationUpdatesAvalible"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="areLocationUpdatesAvalible"
+                android:text="UA"
                 android:textSize="18sp"
-                app:layout_constraintEnd_toEndOf="@+id/areWeMointoringForLocationUpdates"
-                app:layout_constraintStart_toStartOf="@+id/areWeMointoringForLocationUpdates"
-                app:layout_constraintTop_toBottomOf="@+id/areWeMointoringForLocationUpdates" />
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/areLocationUpdatesAvalible4"
+                app:layout_constraintTop_toBottomOf="@+id/textView4" />
 
             <TextView
                 android:id="@+id/textView8"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="60dp"
+                android:layout_marginTop="16dp"
                 android:text="Last Location From the Library"
-                android:textSize="24sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/areLocationUpdatesAvalible" />
+                app:layout_constraintTop_toBottomOf="@+id/thetaTimeValue" />
 
             <TextView
                 android:id="@+id/lastKnownLocation"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:layout_marginTop="24dp"
-                android:text="Broadcasted Location"
+                android:text="Broadcast Ticks"
                 android:textSize="18sp"
-                app:layout_constraintBottom_toTopOf="@+id/silentTicks"
-                app:layout_constraintEnd_toEndOf="@+id/textView8"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toStartOf="@+id/textView8"
-                app:layout_constraintTop_toBottomOf="@+id/textView8" />
+                app:layout_constraintStart_toEndOf="@+id/boradcastedTickLabel"
+                app:layout_constraintTop_toTopOf="@+id/boradcastedTickLabel" />
 
             <Button
                 android:id="@+id/startMointoring"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
                 android:layout_marginTop="16dp"
                 android:text="Start Mointoring"
                 android:textSize="14sp"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/stopMointoring"
                 app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toEndOf="@+id/stopMointoring"
-                app:layout_constraintTop_toBottomOf="@+id/prioritySpinner" />
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/thersholdDistanceEditText" />
 
             <Button
                 android:id="@+id/stopMointoring"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Stop Mointoring"
-                app:layout_constraintEnd_toStartOf="@+id/startMointoring"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/startMointoring"
                 app:layout_constraintTop_toTopOf="@+id/startMointoring" />
 
             <Button
                 android:id="@+id/changeUpdateFrequency"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="change Update Frequency"
+                android:layout_marginEnd="16dp"
+                android:text="change"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toEndOf="@+id/locationUpdatesInterval"
@@ -190,17 +284,97 @@
                 android:id="@+id/silentTicks"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginStart="8dp"
+                android:layout_marginBottom="16dp"
                 android:layout_marginTop="8dp"
                 android:text="Silent Ticks"
                 android:textSize="18sp"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="@+id/lastKnownLocation"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toStartOf="@+id/lastKnownLocation"
+                app:layout_constraintStart_toEndOf="@+id/textView10"
                 app:layout_constraintTop_toBottomOf="@+id/lastKnownLocation" />
+
+            <TextView
+                android:id="@+id/textView5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="THT"
+                app:layout_constraintEnd_toStartOf="@+id/thersholdTimeEditText"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/thersholdTimeEditText" />
+
+            <EditText
+                android:id="@+id/thersholdTimeEditText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:ems="10"
+                android:hint="Threshold Time"
+                android:inputType="textPersonName"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toStartOf="@+id/changeThresgoldTime"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/textView5"
+                app:layout_constraintTop_toBottomOf="@+id/prioritySpinner" />
+
+            <Button
+                android:id="@+id/changeThresgoldTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Change"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/thersholdTimeEditText"
+                app:layout_constraintTop_toTopOf="@+id/thersholdTimeEditText" />
+
+            <TextView
+                android:id="@+id/thetaCircLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TC:"
+                android:textSize="18sp"
+                app:layout_constraintBottom_toBottomOf="@+id/thetaCircValue"
+                app:layout_constraintEnd_toStartOf="@+id/thetaCircValue"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/thetaCircValue" />
+
+            <TextView
+                android:id="@+id/thetaCircValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TC"
+                android:textSize="18sp"
+                app:layout_constraintBottom_toBottomOf="@+id/thetaTimeLabel"
+                app:layout_constraintEnd_toStartOf="@+id/thetaTimeLabel"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/thetaCircLabel"
+                app:layout_constraintTop_toTopOf="@+id/thetaTimeLabel" />
+
+            <TextView
+                android:id="@+id/boradcastedTickLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="TB:"
+                android:textSize="18sp"
+                app:layout_constraintEnd_toStartOf="@+id/lastKnownLocation"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textView8" />
+
+            <TextView
+                android:id="@+id/textView10"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TI:"
+                android:textSize="18sp"
+                app:layout_constraintEnd_toStartOf="@+id/silentTicks"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/silentTicks" />
 
         </android.support.constraint.ConstraintLayout>
     </android.support.v4.widget.NestedScrollView>

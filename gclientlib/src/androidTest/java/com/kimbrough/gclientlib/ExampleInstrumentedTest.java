@@ -49,16 +49,24 @@ public class ExampleInstrumentedTest {
             public void deliverSilentTick(Location location, String lastUpdateTime) {
 
             }
+
+            @Override
+            public void deliverThetaTime(int timerTime, int thresholdTime) {
+
+            }
+
+            @Override
+            public void deliverThetaDistance(double distance, double thresholdRadius) {
+
+            }
+
         });
 
         guser.setLocationUpdatesFrequency(20_000);
         assertEquals(20_000, guser.getLocationUpdatesFrequency());
 
-        guser.setLocationUpdatesSourceProvider(LocationManager.NETWORK_PROVIDER);
-        assertEquals(LocationManager.NETWORK_PROVIDER, guser.getLocationUpdatesSourceProvider());
-
         guser.setThresholdRadius(30);
-        assertEquals(30, guser.getThresholdRadius());
+        assertEquals(30, guser.getThresholdRadius(),0);
 
 
         guser.startMonitoringInBackground();
