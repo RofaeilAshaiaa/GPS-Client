@@ -75,23 +75,27 @@ public class G implements APIMethods {
      */
     private int mFastestLocationUpdateIntervalSeconds = 1;
     /**
-     * determining threshold time which will be used to set up a timer
+     * a time in seconds after which a broadcast of the gps triplet <lat,long,datetime> will occur even if phone is not
+     * moving much.  be default 5 minutes
      */
-    private int mThresholdTime = 10;
+    private int mThresholdTime = 300;
     /**
-     * determining threshold radius
+     * a distance in metres which constitutes an ongoing circle radius based on the location of the phone at some
+     * arbitrary point in time T earlier.  if the phone hasn't moved currently further than this radius, then it
+     * is deemed to be, for the purposes of the library, in the same place, and a consequence of this is that
+     * the gps triplets are not externally broadcast from the library
      */
-    private double mThresholdRadius = 500;
+    private double mThresholdRadius = 5;
     /**
-     * Time when the location was updated represented as a String.
+     * Time when the location was updated via the Google location API. Represented as a String.
      */
     private String mLastUpdateTime;
     /**
-     * determine whether the library activated and in use or not
+     * State variable indicating if the library is switched on and ready for use
      */
     private boolean mIsLibraryActivated;
     /**
-     * mListenerGClient to receive location updates from our library
+     * mListenerGClient to receive location updates from Google loctation API
      */
     private LocationListenerGClient mListenerGClient;
     /**
@@ -116,11 +120,11 @@ public class G implements APIMethods {
      */
     private LocationCallback mLocationCallback;
     /**
-     * Represents a geographical location.
+     * Represents a geographical location corresponding to where this Android phone is.
      */
     private Location mCurrentLocation = null;
     /**
-     * new location received
+     * newest location received from Google is stored in this variable
      */
     private Location mNewLocation = null;
     private Handler mHandler;
@@ -129,7 +133,8 @@ public class G implements APIMethods {
     private ArrayList<Location> mLocationArrayList;
     //determines whether we are connected and location updates available
     private ConnectionState mConnectionState;
-    // determines the difference between new location and the current location
+    // determines the difference between latest new location and a baseline location of this android
+   // phone from some period earlier
     private double mDistance = 0;
 
 
@@ -141,6 +146,7 @@ public class G implements APIMethods {
 
     @Override
     public void activateLibrary() {
+        mIsLibraryActivated = true;
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient((Activity) mListenerGClient);
         mSettingsClient = LocationServices.getSettingsClient((Activity) mListenerGClient);
         // Kick off the process of building the LocationCallback, LocationRequest, and
@@ -148,17 +154,15 @@ public class G implements APIMethods {
         createLocationCallback();
         createLocationRequest();
         buildLocationSettingsRequest();
-        mIsLibraryActivated = true;
-        //
         startLocationMonitoring();
         mListenerGClient.onLibraryStateChanged();
     }
 
     @Override
     public void deactivateLibrary() {
-        mIsLibraryActivated = false;
         stopLocationMonitoring();
         stopTimer();
+        mIsLibraryActivated = false;
         mListenerGClient.onLibraryStateChanged();
     }
 
@@ -325,7 +329,7 @@ public class G implements APIMethods {
                     //we already received a previous location,
                     //we need to make sure that the new location should be broad-casted or not
                     mNewLocation = locationResult.getLastLocation();
-                    mDistance = Utils.distanceInKmBetweenEarthCoordinates(
+                    mDistance = 1000*Utils.distanceInKmBetweenEarthCoordinates(
                             mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude(),
                             mNewLocation.getLatitude(), mNewLocation.getLongitude());
                     mLocationArrayList.add(mNewLocation);
