@@ -32,10 +32,10 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
      */
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
     private G mLocationManager;
-    private int priority = -1;
-    private int intervalInSeconds = -1;
-    private int thresholdTime = -1;
-    private int thresholdDistance = -1;
+    private int priority = PRIORITY_HIGH_ACCURACY;;
+    private int intervalInSeconds = 1;
+    private int thresholdTime = 60;
+    private int thresholdDistance = 1;
     private ActivityMainBinding mMainBinding;
 
     @Override
