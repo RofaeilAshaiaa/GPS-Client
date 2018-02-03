@@ -63,10 +63,10 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
             }
         });
 
-        mMainBinding.changeThreholdDistance.setOnClickListener(new View.OnClickListener() {
+        mMainBinding.changeThresholdDistance.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String distance = mMainBinding.thersholdDistanceEditText.getText().toString();
+                String distance = mMainBinding.thresholdDistanceEditText.getText().toString();
                 if (!distance.trim().isEmpty()) {
                     int distanceValue = Integer.parseInt(distance);
                     mLocationManager.setThresholdRadius(distanceValue);
@@ -74,10 +74,10 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
             }
         });
 
-        mMainBinding.changeThresgoldTime.setOnClickListener(new View.OnClickListener() {
+        mMainBinding.changeThresholdTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String time = mMainBinding.thersholdTimeEditText.getText().toString();
+                String time = mMainBinding.thresholdTimeEditText.getText().toString();
                 if (!time.trim().isEmpty()) {
                     int timeValue = Integer.parseInt(time);
                     mLocationManager.setThresholdTime(timeValue);
@@ -100,13 +100,13 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
                         mLocationManager.setLocationUpdatesFrequency(intervalInSeconds);
                     }
 
-                    String distance = mMainBinding.thersholdDistanceEditText.getText().toString();
+                    String distance = mMainBinding.thresholdDistanceEditText.getText().toString();
                     if (!distance.trim().isEmpty()) {
                         int distanceValue = Integer.parseInt(distance);
                         mLocationManager.setThresholdRadius(distanceValue);
                     }
 
-                    String time = mMainBinding.thersholdTimeEditText.getText().toString();
+                    String time = mMainBinding.thresholdTimeEditText.getText().toString();
                     if (!time.trim().isEmpty()) {
                         int timeValue = Integer.parseInt(time);
                         mLocationManager.setThresholdTime(timeValue);
@@ -165,9 +165,10 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
     @Override
     public void deliverNewLocationUpdate(Location location, String mLastUpdateTime) {
 
-        String value = "lat: " + location.getLatitude()
-                + ", long: " + location.getLongitude()
-                + ", " + mLastUpdateTime;
+        String value = "<" + location.getLatitude()
+                + ", " + location.getLongitude()
+                + ", " + mLastUpdateTime
+                + ">";
 
         mMainBinding.lastKnownLocation.setText(value);
     }
@@ -203,9 +204,10 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
     @Override
     public void deliverSilentTick(Location location, String lastUpdateTime) {
 
-        String value = "lat: " + location.getLatitude()
-                + ", long: " + location.getLongitude()
-                + ", " + lastUpdateTime;
+        String value = "<" + location.getLatitude()
+                + ", " + location.getLongitude()
+                + ", " + lastUpdateTime
+                + ">";
         mMainBinding.silentTicks.setText(value);
     }
 
