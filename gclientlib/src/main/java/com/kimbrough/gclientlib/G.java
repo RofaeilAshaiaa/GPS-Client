@@ -322,8 +322,8 @@ public class G implements APIMethods {
                     mLocationArrayList.add(mCurrentLocation);
                     //sets the first mDistance with zero value of threshold mDistance
                     sendLocationAndTime();
-                    deliverThetaDistance(mDistance);
-                    deliverThetaTime();
+                    deliverQuietCircleRadiusParameters(mDistance);
+                    deliverQuietCircleExpiryParameter();
                     deliverQuietCircleRadiusParameters(mDistance);
                     deliverQuietCircleExpiryParameter();
                     createHandlerAndRunnable();
