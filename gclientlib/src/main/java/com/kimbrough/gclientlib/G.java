@@ -134,7 +134,7 @@ public class G implements APIMethods {
     //determines whether we are connected and location updates available
     private ConnectionState mConnectionState;
     // determines the difference between latest new location and a baseline location of this android
-   // phone from some period earlier
+    // phone from some period earlier
     private double mDistance = 0;
 
 
@@ -142,6 +142,7 @@ public class G implements APIMethods {
 
         this.mListenerGClient = listenerGClient;
         mLocationArrayList = new ArrayList<>();
+        createHandlerAndRunnable();
     }
 
     @Override
@@ -323,13 +324,12 @@ public class G implements APIMethods {
                     sendLocationAndTime();
                     deliverThetaDistance(mDistance);
                     deliverThetaTime();
-                    createHandlerAndRunnable();
                     startTimer();
                 } else {
                     //we already received a previous location,
                     //we need to make sure that the new location should be broad-casted or not
                     mNewLocation = locationResult.getLastLocation();
-                    mDistance = 1000*Utils.distanceInKmBetweenEarthCoordinates(
+                    mDistance = 1000 * Utils.distanceInKmBetweenEarthCoordinates(
                             mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude(),
                             mNewLocation.getLatitude(), mNewLocation.getLongitude());
                     mLocationArrayList.add(mNewLocation);
@@ -353,10 +353,14 @@ public class G implements APIMethods {
             @Override
             public void onLocationAvailability(LocationAvailability locationAvailability) {
                 boolean isLocationAvailable = locationAvailability.isLocationAvailable();
-                if (isLocationAvailable)
-                    mListenerGClient.onLocationAvailabilityChanged(ConnectionState.CONNECTED);
-                else
-                    mListenerGClient.onLocationAvailabilityChanged(ConnectionState.DISCONNECTED);
+                if (isLocationAvailable){
+                    mConnectionState = ConnectionState.CONNECTED;
+                    mListenerGClient.onLocationAvailabilityChanged(mConnectionState);
+                }
+                else{
+                    mConnectionState = ConnectionState.DISCONNECTED;
+                    mListenerGClient.onLocationAvailabilityChanged(mConnectionState);
+                }
             }
         };
     }
