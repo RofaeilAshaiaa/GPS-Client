@@ -51,12 +51,12 @@ public class ExampleInstrumentedTest {
             }
 
             @Override
-            public void deliverThetaTime(int timerTime, int thresholdTime) {
+            public void deliverQuietCircleExpiryParameter(int timerTime, int thresholdTime) {
 
             }
 
             @Override
-            public void deliverThetaDistance(double distance, double thresholdRadius) {
+            public void deliverQuietCircleRadiusParameters(double distance, double thresholdRadius) {
 
             }
 

@@ -19,8 +19,8 @@ public interface LocationListenerGClient {
 
     void deliverSilentTick(Location location, String lastUpdateTime);
 
-    void deliverThetaTime(int timerTime, int thresholdTime);
+    void deliverQuietCircleExpiryParameter(int timerTime, int thresholdTime);
 
-    void deliverThetaDistance(double distance, double thresholdRadius);
+    void deliverQuietCircleRadiusParameters(double distance, double thresholdRadius);
 
 }

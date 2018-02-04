@@ -212,12 +212,12 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
     }
 
     @Override
-    public void deliverThetaTime(int timerTime, int thresholdTime) {
+    public void deliverQuietCircleExpiryParameter(int timerTime, int thresholdTime) {
         mMainBinding.thetaTimeValue.setText(MessageFormat.format("{0}/{1}s", timerTime, thresholdTime));
     }
 
     @Override
-    public void deliverThetaDistance(double distance, double thresholdRadius) {
+    public void deliverQuietCircleRadiusParameters(double distance, double thresholdRadius) {
         mMainBinding.thetaCircValue.setText(MessageFormat.format("{0}/{1}m", distance, thresholdRadius));
     }
 

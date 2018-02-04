@@ -78,14 +78,14 @@ public class G implements APIMethods {
      * a time in seconds after which a broadcast of the gps triplet <lat,long,datetime> will occur even if phone is not
      * moving much.  be default 5 minutes
      */
-    private int mThresholdTime = 300;
+    private int mSilentCircleThresholdTime = 300;
     /**
      * a distance in metres which constitutes an ongoing circle radius based on the location of the phone at some
      * arbitrary point in time T earlier.  if the phone hasn't moved currently further than this radius, then it
      * is deemed to be, for the purposes of the library, in the same place, and a consequence of this is that
      * the gps triplets are not externally broadcast from the library
      */
-    private double mThresholdRadius = 5;
+    private double mSilentCircleThresholdRadius = 5;
     /**
      * Time when the location was updated via the Google location API. Represented as a String.
      */
@@ -231,22 +231,22 @@ public class G implements APIMethods {
 
     @Override
     public double getThresholdRadius() {
-        return mThresholdRadius;
+        return mSilentCircleThresholdRadius;
     }
 
     @Override
     public void setThresholdRadius(double distanceInMeters) {
-        mThresholdRadius = distanceInMeters;
+        mSilentCircleThresholdRadius = distanceInMeters;
     }
 
     @Override
     public int getThresholdTime() {
-        return mThresholdTime;
+        return mSilentCircleThresholdTime;
     }
 
     @Override
     public void setThresholdTime(int seconds) {
-        mThresholdTime = seconds;
+        mSilentCircleThresholdTime = seconds;
     }
 
     @Override
@@ -321,8 +321,8 @@ public class G implements APIMethods {
                     mLocationArrayList.add(mCurrentLocation);
                     //sets the first mDistance with zero value of threshold mDistance
                     sendLocationAndTime();
-                    deliverThetaDistance(mDistance);
-                    deliverThetaTime();
+                    deliverQuietCircleRadiusParameters(mDistance);
+                    deliverQuietCircleExpiryParameter();
                     createHandlerAndRunnable();
                     startTimer();
                 } else {
@@ -334,7 +334,7 @@ public class G implements APIMethods {
                             mNewLocation.getLatitude(), mNewLocation.getLongitude());
                     mLocationArrayList.add(mNewLocation);
 
-                    if (mDistance > mThresholdRadius) {
+                    if (mDistance > mSilentCircleThresholdRadius) {
                         // this means that the client have moved out of the radius we determined
                         mCurrentLocation = mNewLocation;
                         sendLocationAndTime();
@@ -345,9 +345,9 @@ public class G implements APIMethods {
                         mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
                         mListenerGClient.deliverSilentTick(mNewLocation, mLastUpdateTime);
                     }
-                    deliverThetaDistance(mDistance);
+                    deliverQuietCircleRadiusParameters(mDistance);
                 }
-                deliverThetaTime();
+                deliverQuietCircleExpiryParameter();
             }
 
             @Override
@@ -361,21 +361,21 @@ public class G implements APIMethods {
         };
     }
 
-    private void deliverThetaDistance(double distance) {
-        mListenerGClient.deliverThetaDistance(distance, mThresholdRadius);
+    private void deliverQuietCircleRadiusParameters(double distance) {
+        mListenerGClient.deliverQuietCircleRadiusParameters(distance, mSilentCircleThresholdRadius);
     }
 
-    private void deliverThetaTime() {
+    private void deliverQuietCircleExpiryParameter() {
         //deliver time with zero because we had to revert to previous
         // implementation of the timer i.e. timer should fires every second
-        mListenerGClient.deliverThetaTime(0, mThresholdTime);
+        mListenerGClient.deliverQuietCircleExpiryParameter(0, mSilentCircleThresholdTime);
     }
 
     /**
      * starts the timer with the value of threshold time as seconds
      */
     private void startTimer() {
-        mHandler.postDelayed(mRunnable, mThresholdTime * 1000);
+        mHandler.postDelayed(mRunnable, mSilentCircleThresholdTime * 1000);
     }
 
     /**
@@ -394,8 +394,8 @@ public class G implements APIMethods {
                 // if the we reached the threshold time we should
                 // send the location and reset the timer
                 sendLocationAndTime();
-                deliverThetaDistance(mDistance);
-                deliverThetaTime();
+                deliverQuietCircleRadiusParameters(mDistance);
+                deliverQuietCircleExpiryParameter();
                 mLocationArrayList.add(mCurrentLocation);
                 startTimer();
             }
