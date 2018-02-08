@@ -5,16 +5,19 @@ import android.content.pm.PackageManager;
 import android.databinding.DataBindingUtil;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Toast;
 
-import com.kimbrough.gclientlib.ConnectionState;
 import com.kimbrough.gclientlib.G;
+import com.kimbrough.gclientlib.GoogleConnectionState;
 import com.kimbrough.gclientlib.LocationListenerGClient;
+import com.kimbrough.gclientlib.TicksStateUpdate;
 import com.kimbrough_app.gactivity.databinding.ActivityMainBinding;
 
 import java.text.MessageFormat;
@@ -32,11 +35,16 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
      */
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
     private G mLocationManager;
-    private int priority = PRIORITY_HIGH_ACCURACY;;
-    private int intervalInSeconds = 1;
-    private int thresholdTime = 60;
-    private int thresholdDistance = 1;
+    private int priority = -1;
+    private int intervalInSeconds = -1;
+    private int thresholdTime = -1;
+    private int thresholdDistance = -1;
     private ActivityMainBinding mMainBinding;
+    private int mServerTimer= 1;
+    // handler for threshold time
+    private Handler mServerHandler;
+    // runnable for threshold time
+    private Runnable mServerRunnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +54,8 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
         mMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
         requestPermissions();
+
+        createHandlerAndRunnable();
 
         mMainBinding.changeUpdateFrequency.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -108,11 +118,14 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
 
                     String time = mMainBinding.thresholdTimeEditText.getText().toString();
                     if (!time.trim().isEmpty()) {
-                        int timeValue = Integer.parseInt(time);
-                        mLocationManager.setThresholdTime(timeValue);
+                        thresholdTime = Integer.parseInt(time);
+                        mLocationManager.setThresholdTime(thresholdTime);
+                    }else {
+                        thresholdTime = mLocationManager.getThresholdTime();
                     }
 
                     mLocationManager.activateLibrary();
+                    startServerTimer();
 
                 } else {
                     requestPermissions();
@@ -125,6 +138,8 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
             @Override
             public void onClick(View view) {
                 mLocationManager.deactivateLibrary();
+                stopServerTimer();
+
             }
         });
 
@@ -162,6 +177,15 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
 
     }
 
+    private void stopServerTimer() {
+        mServerHandler.removeCallbacks(mServerRunnable);
+    }
+
+    private void startServerTimer() {
+
+        mServerHandler.postDelayed(mServerRunnable, 1_000);
+    }
+
     @Override
     public void deliverNewLocationUpdate(Location location, String mLastUpdateTime) {
 
@@ -174,30 +198,38 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
     }
 
     @Override
-    public void onLocationAvailabilityChanged(ConnectionState state) {
-        if (state == ConnectionState.CONNECTED) {
-            mMainBinding.areLocationUpdatesAvalible.setText(R.string.on_label);
-
-        } else if (state == ConnectionState.DISCONNECTED) {
-            mMainBinding.areLocationUpdatesAvalible.setText(R.string.off_label);
-        }
-    }
-
-    @Override
     public void onLibraryStateChanged() {
         if (mLocationManager.isLibraryActivated()) {
             mMainBinding.isLibraryActivated.setText(R.string.on_label);
+            mServerHandler.post(mServerRunnable);
         } else {
             mMainBinding.isLibraryActivated.setText(R.string.off_label);
         }
     }
 
     @Override
-    public void onMonitoringStateChanged() {
-        if (mLocationManager.isClientMonitoringLocation()) {
-            mMainBinding.areWeMointoringForLocationUpdates.setText(R.string.on_label);
-        } else {
-            mMainBinding.areWeMointoringForLocationUpdates.setText(R.string.off_label);
+    public void onMonitoringStateChanged(TicksStateUpdate ticksStateUpdate) {
+
+        switch (ticksStateUpdate) {
+
+            case RED:
+                mMainBinding.areWeMointoringForLocationUpdates.setText("R");
+                mMainBinding.areWeMointoringForLocationUpdates.setBackgroundColor(
+                        ContextCompat.getColor(this, R.color.red));
+                break;
+
+            case GREEN:
+                mMainBinding.areWeMointoringForLocationUpdates.setText("G");
+                mMainBinding.areWeMointoringForLocationUpdates.setBackgroundColor(
+                        ContextCompat.getColor(this, R.color.green));
+                break;
+
+            case ORANGE:
+                mMainBinding.areWeMointoringForLocationUpdates.setBackgroundColor(
+                        ContextCompat.getColor(this, R.color.orange));
+
+                mMainBinding.areWeMointoringForLocationUpdates.setText("O");
+                break;
         }
     }
 
@@ -213,12 +245,22 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
 
     @Override
     public void deliverQuietCircleExpiryParameter(int timerTime, int thresholdTime) {
-        mMainBinding.thetaTimeValue.setText(MessageFormat.format("{0}/{1}s", timerTime, thresholdTime));
+        mMainBinding.thetaTimeValue.setText(MessageFormat.format("{0}/{1}s", mServerTimer, thresholdTime));
     }
 
     @Override
     public void deliverQuietCircleRadiusParameters(double distance, double thresholdRadius) {
         mMainBinding.thetaCircValue.setText(MessageFormat.format("{0}/{1}m", distance, thresholdRadius));
+    }
+
+    @Override
+    public void onchangeInGoogleStateConnection(GoogleConnectionState state) {
+        mMainBinding.areLocationUpdatesAvalible.setText(state.toString());
+    }
+
+    @Override
+    public void resetServerTimer() {
+        mServerTimer = 1;
     }
 
     /**
@@ -239,6 +281,20 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
         ActivityCompat.requestPermissions(MainActivity.this,
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                 REQUEST_PERMISSIONS_REQUEST_CODE);
+    }
+
+    private void createHandlerAndRunnable() {
+        mServerHandler = new Handler();
+        mServerRunnable = new Runnable() {
+            @Override
+            public void run() {
+
+                    mServerTimer++;
+                    mServerHandler.postDelayed(mServerRunnable, thresholdTime * 1_000);
+
+            }
+        };
+
     }
 
 }

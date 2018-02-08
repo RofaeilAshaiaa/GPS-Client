@@ -1,7 +1,6 @@
 package com.kimbrough.gclientlib;
 
 import android.location.Location;
-import android.location.LocationManager;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.google.android.gms.location.LocationRequest;
@@ -30,10 +29,6 @@ public class ExampleInstrumentedTest {
 
             }
 
-            @Override
-            public void onLocationAvailabilityChanged(ConnectionState state) {
-
-            }
 
             @Override
             public void onLibraryStateChanged() {
@@ -41,7 +36,7 @@ public class ExampleInstrumentedTest {
             }
 
             @Override
-            public void onMonitoringStateChanged() {
+            public void onMonitoringStateChanged(TicksStateUpdate ticksStateUpdate) {
 
             }
 
@@ -57,6 +52,16 @@ public class ExampleInstrumentedTest {
 
             @Override
             public void deliverQuietCircleRadiusParameters(double distance, double thresholdRadius) {
+
+            }
+
+            @Override
+            public void onchangeInGoogleStateConnection(GoogleConnectionState state) {
+
+            }
+
+            @Override
+            public void resetServerTimer() {
 
             }
 

@@ -9,17 +9,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity
-            android:name="com.kimbrough_app.gactivity.Gactivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
-
-        </activity>
-
-        <service
-            android:name="com.kimbrough_app.gactivity.GeofenceService"
-            android:enabled="true"
-            android:exported="true" />
 
         <activity
             android:name="com.kimbrough_app.gactivity.MainActivity"

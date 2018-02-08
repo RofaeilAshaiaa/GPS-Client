@@ -11,7 +11,6 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
@@ -127,34 +126,58 @@ public class G implements APIMethods {
      * newest location received from Google is stored in this variable
      */
     private Location mNewLocation = null;
-    private Handler mHandler;
-    private Runnable mRunnable;
+    // handler for threshold time
+    private Handler mThresholdTimeHandler;
+    // runnable for threshold time
+    private Runnable mThresholdTimeRunnable;
+    // handler for metadata states
+    private Handler mMetaDataHandler;
+    // runnable for threshold time
+    private Runnable mMetaDataRunnable;
     // list of locations until we rest the timer
     private ArrayList<Location> mLocationArrayList;
-    //determines whether we are connected and location updates available
-    private ConnectionState mConnectionState;
+    //determines states of google location services
+    private GoogleConnectionState mConnectionState;
     // determines the difference between latest new location and a baseline location of this android
     // phone from some period earlier
     private double mDistance = 0;
-
+    //factor in which we determine whether to send the metadata or not
+    private double mScalingFactor = 1.5;
+    //timer for internal state updates(metadata),
+    private int mTicksTimer = 0;
+    // for counting seconds that pass and determining in which second we are
+    private int mSateTimer = 0;
+    //indicates whether we received any location updates in threshold time or not
+    private boolean mIsThereAnyUpdates = false;
+    //are we actually getting the expected ticks, i.e. reflect whether
+    // we are currently experiencing the ticks at the rate we expect
+    private TicksStateUpdate mTicksStateUpdate;
 
     public G(final LocationListenerGClient listenerGClient) {
-
         this.mListenerGClient = listenerGClient;
         mLocationArrayList = new ArrayList<>();
         createHandlerAndRunnable();
+
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient((Activity) mListenerGClient);
+        mSettingsClient = LocationServices.getSettingsClient((Activity) mListenerGClient);
     }
 
     @Override
     public void activateLibrary() {
         mIsLibraryActivated = true;
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient((Activity) mListenerGClient);
-        mSettingsClient = LocationServices.getSettingsClient((Activity) mListenerGClient);
         // Kick off the process of building the LocationCallback, LocationRequest, and
         // LocationSettingsRequest objects.
         createLocationCallback();
         createLocationRequest();
         buildLocationSettingsRequest();
+
+
+        mConnectionState = GoogleConnectionState.NEW_UNCONNECTED_SESSION;
+        mListenerGClient.onchangeInGoogleStateConnection(mConnectionState);
+
+        mTicksStateUpdate = TicksStateUpdate.RED;
+        mListenerGClient.onMonitoringStateChanged(mTicksStateUpdate);
+
         startLocationMonitoring();
         mListenerGClient.onLibraryStateChanged();
     }
@@ -162,9 +185,20 @@ public class G implements APIMethods {
     @Override
     public void deactivateLibrary() {
         stopLocationMonitoring();
-        stopTimer();
+        stopThresholdTimer();
+        stopMetaDataTimer();
+        mIsThereAnyUpdates = false;
         mIsLibraryActivated = false;
         mListenerGClient.onLibraryStateChanged();
+
+        mCurrentLocation = null;
+        mNewLocation = null;
+
+        mTicksStateUpdate = TicksStateUpdate.RED;
+        mListenerGClient.onMonitoringStateChanged(mTicksStateUpdate);
+
+        mConnectionState = GoogleConnectionState.DISCONNECTED_GOOGLE_API;
+        mListenerGClient.onchangeInGoogleStateConnection(mConnectionState);
     }
 
     @Override
@@ -176,14 +210,12 @@ public class G implements APIMethods {
     public void startLocationMonitoring() {
         startLocationUpdates();
         mMonitoring = true;
-        mListenerGClient.onMonitoringStateChanged();
     }
 
     @Override
     public void stopLocationMonitoring() {
         mFusedLocationClient.removeLocationUpdates(mLocationCallback);
         mMonitoring = false;
-        mListenerGClient.onMonitoringStateChanged();
     }
 
     @Override
@@ -316,7 +348,15 @@ public class G implements APIMethods {
             public void onLocationResult(final LocationResult locationResult) {
                 super.onLocationResult(locationResult);
 
+                mTicksStateUpdate = TicksStateUpdate.GREEN;
+                mListenerGClient.onMonitoringStateChanged(mTicksStateUpdate);
+
+                mIsThereAnyUpdates = true;
+                stopMetaDataTimer();
+                startMetaDataTimer();
+
                 if (mCurrentLocation == null) {
+                    Log.d(TAG, "onLocationResult: first location update");
                     //this means this is the first location we received
                     mCurrentLocation = locationResult.getLastLocation();
                     mLocationArrayList.add(mCurrentLocation);
@@ -324,11 +364,12 @@ public class G implements APIMethods {
                     sendLocationAndTime();
                     deliverQuietCircleRadiusParameters(mDistance);
                     deliverQuietCircleExpiryParameter();
-                    deliverQuietCircleRadiusParameters(mDistance);
-                    deliverQuietCircleExpiryParameter();
                     createHandlerAndRunnable();
-                    startTimer();
+                    stopThresholdTimer();
+                    startThresholdTimer();
+                    mListenerGClient.resetServerTimer();
                 } else {
+                    Log.d(TAG, "onLocationResult: new location update");
                     //we already received a previous location,
                     //we need to make sure that the new location should be broad-casted or not
                     mNewLocation = locationResult.getLastLocation();
@@ -337,32 +378,36 @@ public class G implements APIMethods {
                             mNewLocation.getLatitude(), mNewLocation.getLongitude());
                     mLocationArrayList.add(mNewLocation);
 
+                    deliverQuietCircleRadiusParameters(mDistance);
+                    deliverQuietCircleExpiryParameter();
+
                     if (mDistance > mSilentCircleThresholdRadius) {
+                        Log.d(TAG, "onLocationResult: broadcast tick");
                         // this means that the client have moved out of the radius we determined
                         mCurrentLocation = mNewLocation;
                         sendLocationAndTime();
-                        stopTimer();
-                        startTimer();
+                        stopThresholdTimer();
+                        startThresholdTimer();
+                        mListenerGClient.resetServerTimer();
                     } else {
+                        Log.d(TAG, "onLocationResult: silent tick");
                         //deliver silent consuming of ticks
                         mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
                         mListenerGClient.deliverSilentTick(mNewLocation, mLastUpdateTime);
                     }
-                    deliverQuietCircleRadiusParameters(mDistance);
+
                 }
-                deliverQuietCircleExpiryParameter();
             }
 
             @Override
             public void onLocationAvailability(LocationAvailability locationAvailability) {
                 boolean isLocationAvailable = locationAvailability.isLocationAvailable();
-                if (isLocationAvailable){
-                    mConnectionState = ConnectionState.CONNECTED;
-                    mListenerGClient.onLocationAvailabilityChanged(mConnectionState);
-                }
-                else{
-                    mConnectionState = ConnectionState.DISCONNECTED;
-                    mListenerGClient.onLocationAvailabilityChanged(mConnectionState);
+                if (isLocationAvailable) {
+                    mConnectionState = GoogleConnectionState.CONNECTED_TO_GOOGLE_LOCATION_API;
+                    mListenerGClient.onchangeInGoogleStateConnection(mConnectionState);
+                } else {
+                    mConnectionState = GoogleConnectionState.GOOGLE_UPDATE_UNAVAILABLE;
+                    mListenerGClient.onchangeInGoogleStateConnection(mConnectionState);
                 }
             }
         };
@@ -381,30 +426,61 @@ public class G implements APIMethods {
     /**
      * starts the timer with the value of threshold time as seconds
      */
-    private void startTimer() {
-        mHandler.postDelayed(mRunnable, mSilentCircleThresholdTime * 1000);
+    private void startThresholdTimer() {
+        mThresholdTimeHandler.postDelayed(mThresholdTimeRunnable, mSilentCircleThresholdTime * 1_000);
+    }
+
+    /**
+     * starts the timer with the value of scaling factor * threshold time as seconds
+     */
+    private void startMetaDataTimer() {
+        long metaDataTime = (long) (mSilentCircleThresholdTime * mScalingFactor);
+        mMetaDataHandler.postDelayed(mMetaDataRunnable, metaDataTime * 1_000);
     }
 
     /**
      * stop the current timer if running and empty the list of locations we have
      */
-    private void stopTimer() {
-        mHandler.removeCallbacks(mRunnable);
+    private void stopThresholdTimer() {
+        mThresholdTimeHandler.removeCallbacks(mThresholdTimeRunnable);
+        mDistance = 0;
         mLocationArrayList.clear();
     }
 
+    /**
+     * stop
+     */
+    private void stopMetaDataTimer() {
+        mMetaDataHandler.removeCallbacks(mMetaDataRunnable);
+    }
+
     private void createHandlerAndRunnable() {
-        mHandler = new Handler();
-        mRunnable = new Runnable() {
+        mThresholdTimeHandler = new Handler();
+        mThresholdTimeRunnable = new Runnable() {
             @Override
             public void run() {
                 // if the we reached the threshold time we should
                 // send the location and reset the timer
                 sendLocationAndTime();
-                deliverQuietCircleRadiusParameters(mDistance);
-                deliverQuietCircleExpiryParameter();
                 mLocationArrayList.add(mCurrentLocation);
-                startTimer();
+                startThresholdTimer();
+                mIsThereAnyUpdates = false;
+                Log.d(TAG, "run: threshold timer Fires");
+            }
+        };
+
+        mMetaDataHandler = new Handler();
+        mMetaDataRunnable = new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "run: metadata timer Fires");
+                if (mIsThereAnyUpdates) {
+                    mTicksStateUpdate = TicksStateUpdate.GREEN;
+                    mListenerGClient.onMonitoringStateChanged(mTicksStateUpdate);
+                } else {
+                    mTicksStateUpdate = TicksStateUpdate.ORANGE;
+                    mListenerGClient.onMonitoringStateChanged(mTicksStateUpdate);
+                }
             }
         };
     }
@@ -442,6 +518,8 @@ public class G implements APIMethods {
                                 != PackageManager.PERMISSION_GRANTED &&
                                 ActivityCompat.checkSelfPermission((Context) mListenerGClient, Manifest.permission.ACCESS_COARSE_LOCATION)
                                         != PackageManager.PERMISSION_GRANTED) {
+                            mConnectionState = GoogleConnectionState.GOOGLE_INIT_CONNECT_FAILURE_TO_ESTABLISH_CONNECTION;
+                            mListenerGClient.onchangeInGoogleStateConnection(mConnectionState);
                             return;
                         }
                         mFusedLocationClient.requestLocationUpdates(mLocationRequest,
@@ -464,13 +542,15 @@ public class G implements APIMethods {
                                     rae.startResolutionForResult((Activity) mListenerGClient, REQUEST_CHECK_SETTINGS);
                                 } catch (IntentSender.SendIntentException sie) {
                                     Log.i(TAG, "PendingIntent unable to execute request.");
+                                    mConnectionState = GoogleConnectionState.GOOGLE_INIT_CONNECT_FAILURE_TO_ESTABLISH_CONNECTION;
+                                    mListenerGClient.onchangeInGoogleStateConnection(mConnectionState);
                                 }
                                 break;
-                            case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                                String errorMessage = "Location settings are inadequate, and cannot be " +
-                                        "fixed here. Fix in Settings.";
-                                Log.e(TAG, errorMessage);
-                                Toast.makeText((Context) mListenerGClient, errorMessage, Toast.LENGTH_LONG).show();
+                            //Location settings are inadequate, and cannot be fixed here. Fix in Settings
+                            case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE: {
+                                mConnectionState = GoogleConnectionState.GOOGLE_INIT_CONNECT_FAILURE_TO_ESTABLISH_CONNECTION;
+                                mListenerGClient.onchangeInGoogleStateConnection(mConnectionState);
+                            }
                         }
 
                     }

@@ -11,11 +11,9 @@ public interface LocationListenerGClient {
 
     void deliverNewLocationUpdate(Location location, String mLastUpdateTime);
 
-    void onLocationAvailabilityChanged(ConnectionState state);
-
     void onLibraryStateChanged();
 
-    void onMonitoringStateChanged();
+    void onMonitoringStateChanged(TicksStateUpdate ticksStateUpdate);
 
     void deliverSilentTick(Location location, String lastUpdateTime);
 
@@ -23,4 +21,7 @@ public interface LocationListenerGClient {
 
     void deliverQuietCircleRadiusParameters(double distance, double thresholdRadius);
 
+    void onchangeInGoogleStateConnection(GoogleConnectionState state);
+
+    void resetServerTimer();
 }

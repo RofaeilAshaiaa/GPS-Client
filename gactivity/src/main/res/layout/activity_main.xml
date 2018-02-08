@@ -35,7 +35,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toEndOf="@+id/thetaTimeLabel"
-                app:layout_constraintTop_toBottomOf="@+id/areLocationUpdatesAvalible" />
+                app:layout_constraintTop_toBottomOf="@+id/areWeMointoringForLocationUpdates" />
 
             <TextView
                 android:id="@+id/textView6"
@@ -176,7 +176,7 @@
                 app:layout_constraintTop_toTopOf="@+id/isLibraryActivated" />
 
             <TextView
-                android:id="@+id/areWeMointoringForLocationUpdates"
+                android:id="@+id/areLocationUpdatesAvalible"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="goog"
@@ -194,32 +194,33 @@
                 android:layout_marginStart="8dp"
                 android:text="goog"
                 android:textSize="18sp"
-                app:layout_constraintBottom_toBottomOf="@+id/areWeMointoringForLocationUpdates"
-                app:layout_constraintEnd_toStartOf="@+id/areWeMointoringForLocationUpdates"
+                app:layout_constraintBottom_toBottomOf="@+id/areLocationUpdatesAvalible"
+                app:layout_constraintEnd_toStartOf="@+id/areLocationUpdatesAvalible"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toEndOf="@+id/isLibraryActivated"
-                app:layout_constraintTop_toTopOf="@+id/areWeMointoringForLocationUpdates" />
+                app:layout_constraintTop_toTopOf="@+id/areLocationUpdatesAvalible" />
 
             <TextView
                 android:id="@+id/areLocationUpdatesAvalible4"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:text="upd"
+                android:text="mon"
                 android:textSize="18sp"
-                app:layout_constraintBottom_toBottomOf="@+id/areLocationUpdatesAvalible"
-                app:layout_constraintEnd_toStartOf="@+id/areLocationUpdatesAvalible"
+                app:layout_constraintBottom_toBottomOf="@+id/areWeMointoringForLocationUpdates"
+                app:layout_constraintEnd_toStartOf="@+id/areWeMointoringForLocationUpdates"
                 app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toEndOf="@+id/areWeMointoringForLocationUpdates"
-                app:layout_constraintTop_toTopOf="@+id/areLocationUpdatesAvalible" />
+                app:layout_constraintStart_toEndOf="@+id/areLocationUpdatesAvalible"
+                app:layout_constraintTop_toTopOf="@+id/areWeMointoringForLocationUpdates" />
 
             <TextView
-                android:id="@+id/areLocationUpdatesAvalible"
+                android:id="@+id/areWeMointoringForLocationUpdates"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="upd"
-                android:textSize="13sp"
+                android:padding="4dp"
+                android:textSize="14sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toEndOf="@+id/areLocationUpdatesAvalible4"
