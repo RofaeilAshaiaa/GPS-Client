@@ -36,7 +36,12 @@ public class GeoUtils {
     }
 
 
-    /*    Law of cosines:	d = acos( sin φ1 ⋅ sin φ2 + cos φ1 ⋅ cos φ2 ⋅ cos Δλ ) ⋅ R */
+    /*    Law of cosines:	d = acos( sin φ1 ⋅ sin φ2 + cos φ1 ⋅ cos φ2 ⋅ cos Δλ ) ⋅ R
+    *
+    * https://en.wikipedia.org/wiki/Great-circle_distance
+    * this claims that, on 32bit systems you get cos() rounding problems for close points, and that haversine
+    * is better for close points
+    * */
     public static double lawOfCosinesDistance_km(double lat1, double lon1, double lat2, double lon2) {
         double φ1 = degreesToRadians(lat1);
         double φ2 = degreesToRadians(lat2);
