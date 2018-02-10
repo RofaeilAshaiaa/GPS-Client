@@ -373,7 +373,7 @@ public class G implements APIMethods {
                     //we already received a previous location,
                     //we need to make sure that the new location should be broad-casted or not
                     mNewLocation = locationResult.getLastLocation();
-                    mDistance = 1000 * Utils.haversineDistance_km(
+                    mDistance = 1000 * GeoUtils.haversineDistance_km(
                             mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude(),
                             mNewLocation.getLatitude(), mNewLocation.getLongitude());
                     mLocationArrayList.add(mNewLocation);

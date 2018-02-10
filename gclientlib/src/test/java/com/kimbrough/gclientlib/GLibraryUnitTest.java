@@ -17,9 +17,9 @@ public class GLibraryUnitTest {
     @Test
     public void UtilsUnitTest() throws Exception {
 
-        double result1 = Utils.haversineDistance_km(0, 0, 0, 0);
+        double result1 = GeoUtils.haversineDistance_km(0, 0, 0, 0);
         assertEquals(0, result1, 0);
-        double result2 = Utils.haversineDistance_km(51.5, 0, 38.8, -77.1);
+        double result2 = GeoUtils.haversineDistance_km(51.5, 0, 38.8, -77.1);
         assertEquals(5918.185064088765, result2, 0);
     }
 }
