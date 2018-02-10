@@ -126,31 +126,55 @@ public class G implements APIMethods {
      * newest location received from Google is stored in this variable
      */
     private Location mNewLocation = null;
-    // handler for threshold time
+    /**
+     * handler for threshold time
+     */
     private Handler mThresholdTimeHandler;
-    // runnable for threshold time
+    /**
+     * runnable for threshold time
+     */
     private Runnable mThresholdTimeRunnable;
-    // handler for metadata states
+    /**
+     * handler for metadata states
+     */
     private Handler mMetaDataHandler;
-    // runnable for threshold time
+    /**
+     * runnable for threshold time
+     */
     private Runnable mMetaDataRunnable;
-    // list of locations until we rest the timer
+    /**
+     * list of locations until we rest the timer
+     */
     private ArrayList<Location> mLocationArrayList;
-    //determines states of google location services
+    /**
+     * determines states of google location services
+     */
     private GoogleConnectionState mConnectionState;
-    // determines the difference between latest new location and a baseline location of this android
-    // phone from some period earlier
+    /**
+     * determines the difference between latest new location
+     * and a baseline location of this android phone from some period earlier
+     */
     private double mDistance = 0;
-    //factor in which we determine whether to send the metadata or not
+    /**
+     * factor in which we determine whether to send the metadata or not
+     */
     private double mScalingFactor = 1.5;
-    //timer for internal state updates(metadata),
+    /**
+     * timer for internal state updates(metadata)
+     */
     private int mTicksTimer = 0;
-    // for counting seconds that pass and determining in which second we are
+    /**
+     * for counting seconds that pass and determining in which second we are
+     */
     private int mSateTimer = 0;
-    //indicates whether we received any location updates in threshold time or not
+    /**
+     * indicates whether we received any location updates in threshold time or not
+     */
     private boolean mIsThereAnyUpdates = false;
-    //are we actually getting the expected ticks, i.e. reflect whether
-    // we are currently experiencing the ticks at the rate we expect
+    /**
+     * are we actually getting the expected ticks,
+     * i.e.reflect whether we are currently experiencing the ticks at the rate we expect
+     */
     private TicksStateUpdate mTicksStateUpdate;
 
     public G(final LocationListenerGClient listenerGClient) {
@@ -434,7 +458,7 @@ public class G implements APIMethods {
      * starts the timer with the value of scaling factor * threshold time as seconds
      */
     private void startMetaDataTimer() {
-        long metaDataTime = (long) (mSilentCircleThresholdTime * mScalingFactor);
+        long metaDataTime = (long) (mLocationUpdateIntervalSeconds * mScalingFactor);
         mMetaDataHandler.postDelayed(mMetaDataRunnable, metaDataTime * 1_000);
     }
 

@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
             public void onClick(View view) {
                 String distance = mMainBinding.thresholdDistanceEditText.getText().toString();
                 if (!distance.trim().isEmpty()) {
-                    int distanceValue = Integer.parseInt(distance);
+                    double distanceValue = Double.parseDouble(distance);
                     mLocationManager.setThresholdRadius(distanceValue);
                 }
             }
@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
 
                     String distance = mMainBinding.thresholdDistanceEditText.getText().toString();
                     if (!distance.trim().isEmpty()) {
-                        int distanceValue = Integer.parseInt(distance);
+                        double distanceValue = Double.parseDouble(distance);
                         mLocationManager.setThresholdRadius(distanceValue);
                     }
 
@@ -256,6 +256,40 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
     @Override
     public void onchangeInGoogleStateConnection(GoogleConnectionState state) {
         mMainBinding.areLocationUpdatesAvalible.setText(state.toString());
+
+        switch (state) {
+
+            case NEW_UNCONNECTED_SESSION:
+                mMainBinding.areLocationUpdatesAvalible.setText("NEW_UNCONNECTED_SESSION");
+                mMainBinding.areLocationUpdatesAvalible.setBackgroundColor(
+                        ContextCompat.getColor(this, R.color.cyan));
+                break;
+
+            case GOOGLE_INIT_CONNECT_FAILURE_TO_ESTABLISH_CONNECTION:
+                mMainBinding.areLocationUpdatesAvalible.setText("INIT_CONNECTION_FAILURE");
+                mMainBinding.areLocationUpdatesAvalible.setBackgroundColor(
+                        ContextCompat.getColor(this, R.color.red));
+                break;
+
+            case CONNECTED_TO_GOOGLE_LOCATION_API:
+                mMainBinding.areLocationUpdatesAvalible.setText("CONNECTED");
+                mMainBinding.areLocationUpdatesAvalible.setBackgroundColor(
+                        ContextCompat.getColor(this, R.color.green));
+
+                break;
+            case GOOGLE_UPDATE_UNAVAILABLE:
+                mMainBinding.areLocationUpdatesAvalible.setText("UPDATE_UNAVAILABLE");
+                mMainBinding.areLocationUpdatesAvalible.setBackgroundColor(
+                        ContextCompat.getColor(this, R.color.orange));
+
+                break;
+            case DISCONNECTED_GOOGLE_API:
+                mMainBinding.areLocationUpdatesAvalible.setText("DISCONNECTED");
+                mMainBinding.areLocationUpdatesAvalible.setBackgroundColor(
+                        ContextCompat.getColor(this, R.color.cyan));
+
+                break;
+        }
     }
 
     @Override

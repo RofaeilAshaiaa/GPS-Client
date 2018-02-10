@@ -7,5 +7,7 @@
     <color name="red">#f44336</color>
     <color name="green">#20ab22</color>
     <color name="orange">#f9a825</color>
+    <color name="cyan">#46f9f3</color>
+    <color name="yellow">#eeff41</color>
 
 </resources>
