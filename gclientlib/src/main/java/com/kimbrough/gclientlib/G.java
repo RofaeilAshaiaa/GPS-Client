@@ -45,10 +45,7 @@ public class G implements APIMethods {
      * Constant used in the location settings dialog.
      */
     private static final int REQUEST_CHECK_SETTINGS = 0x9;
-    /**
-     * desired interval for location Update interval in milliseconds
-     */
-    private long mLocationUpdateIntervalMilliseconds = 1_000;
+
     /**
      * desired interval for location updates in seconds
      */
@@ -65,10 +62,7 @@ public class G implements APIMethods {
      * determine the priority of location updates request
      */
     private int mPriority = PRIORITY_HIGH_ACCURACY;
-    /**
-     * desired fastest interval for location updates in milliseconds
-     */
-    private int mFastestLocationUpdateIntervalMilliseconds = 1_000;
+
     /**
      * desired fastest interval for location updates in seconds
      */
@@ -119,46 +113,46 @@ public class G implements APIMethods {
      */
     private LocationCallback mLocationCallback;
     /**
-     * Represents a geographical location corresponding to where this Android phone is.
+     * Represents a geographical location corresponding to where this Android phone was when a new circle was set
      */
-    private Location mCurrentLocation = null;
+    private Location mCircleCentre = null;
     /**
-     * newest location received from Google is stored in this variable
+     * newest location received from Google is stored in this variable.  it represents the latest best guess of the library for where the phone is
      */
-    private Location mNewLocation = null;
+    private Location mCurrentPhoneLocation = null;
     /**
      * handler for threshold time
      */
-    private Handler mThresholdTimeHandler;
+    private Handler mSilentCircleTimeHandler;
     /**
      * runnable for threshold time
      */
-    private Runnable mThresholdTimeRunnable;
+    private Runnable mSilentCircleTimeRunnable;
     /**
      * handler for metadata states
      */
-    private Handler mMetaDataHandler;
+    private Handler mGoogleUpdatesHeartbeatTimerHandler;
     /**
      * runnable for threshold time
      */
-    private Runnable mMetaDataRunnable;
+    private Runnable mGoogleUpdatesHeartbeatRunnable;
     /**
-     * list of locations until we rest the timer
+     * list of locations received from Google within the context of the current silent circle
      */
-    private ArrayList<Location> mLocationArrayList;
+    private ArrayList<Location> mInCircleLocationJourney;
     /**
      * determines states of google location services
      */
-    private GoogleConnectionState mConnectionState;
+    private GoogleConnectionState mGoogleConnectionState;
     /**
      * determines the difference between latest new location
      * and a baseline location of this android phone from some period earlier
      */
-    private double mDistance = 0;
+    private double mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres = 0;
     /**
      * factor in which we determine whether to send the metadata or not
      */
-    private double mScalingFactor = 1.5;
+    private double mHeartbeatTimerScalingFactor = 1.5;
     /**
      * timer for internal state updates(metadata)
      */
@@ -170,17 +164,17 @@ public class G implements APIMethods {
     /**
      * indicates whether we received any location updates in threshold time or not
      */
-    private boolean mIsThereAnyUpdates = false;
+    private boolean mCurrentlyReceivingHealthyGoogleHeartbeats = false;
     /**
      * are we actually getting the expected ticks,
      * i.e.reflect whether we are currently experiencing the ticks at the rate we expect
      */
-    private TicksStateUpdate mTicksStateUpdate;
+    private TicksStateUpdate mHeartbeatsState;
 
     public G(final LocationListenerGClient listenerGClient) {
         this.mListenerGClient = listenerGClient;
-        mLocationArrayList = new ArrayList<>();
-        createHandlerAndRunnable();
+        mInCircleLocationJourney = new ArrayList<>();
+        createSilentCircleHandlerAndRunnable();
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient((Activity) mListenerGClient);
         mSettingsClient = LocationServices.getSettingsClient((Activity) mListenerGClient);
@@ -196,11 +190,11 @@ public class G implements APIMethods {
         buildLocationSettingsRequest();
 
 
-        mConnectionState = GoogleConnectionState.NEW_UNCONNECTED_SESSION;
-        mListenerGClient.onchangeInGoogleStateConnection(mConnectionState);
+        mGoogleConnectionState = GoogleConnectionState.NEW_UNCONNECTED_SESSION;
+        mListenerGClient.onchangeInGoogleStateConnection(mGoogleConnectionState);
 
-        mTicksStateUpdate = TicksStateUpdate.RED;
-        mListenerGClient.onMonitoringStateChanged(mTicksStateUpdate);
+        mHeartbeatsState = TicksStateUpdate.RED;
+        mListenerGClient.onMonitoringStateChanged(mHeartbeatsState);
 
         startLocationMonitoring();
         mListenerGClient.onLibraryStateChanged();
@@ -209,20 +203,20 @@ public class G implements APIMethods {
     @Override
     public void deactivateLibrary() {
         stopLocationMonitoring();
-        stopThresholdTimer();
-        stopMetaDataTimer();
-        mIsThereAnyUpdates = false;
+        stopSilentCircleTimer();
+        stopHeartbeatsTimer();
+        mCurrentlyReceivingHealthyGoogleHeartbeats = false;
         mIsLibraryActivated = false;
         mListenerGClient.onLibraryStateChanged();
 
-        mCurrentLocation = null;
-        mNewLocation = null;
+        mCircleCentre = null;
+        mCurrentPhoneLocation = null;
 
-        mTicksStateUpdate = TicksStateUpdate.RED;
-        mListenerGClient.onMonitoringStateChanged(mTicksStateUpdate);
+        mHeartbeatsState = TicksStateUpdate.RED;
+        mListenerGClient.onMonitoringStateChanged(mHeartbeatsState);
 
-        mConnectionState = GoogleConnectionState.DISCONNECTED_GOOGLE_API;
-        mListenerGClient.onchangeInGoogleStateConnection(mConnectionState);
+        mGoogleConnectionState = GoogleConnectionState.DISCONNECTED_GOOGLE_API;
+        mListenerGClient.onchangeInGoogleStateConnection(mGoogleConnectionState);
     }
 
     @Override
@@ -262,11 +256,10 @@ public class G implements APIMethods {
     @Override
     public void setLocationUpdatesFrequency(long timeInSeconds) {
         mLocationUpdateIntervalSeconds = timeInSeconds;
-        mLocationUpdateIntervalMilliseconds = timeInSeconds * 1_000;
         //start location monitoring with the new settings
         if (mIsLibraryActivated && (mMonitoring || mMonitoringInBackground)) {
             // restart location monitoring with the new parameters
-            mLocationRequest.setInterval(mLocationUpdateIntervalMilliseconds);
+            mLocationRequest.setInterval(timeInSeconds * 1_000);
             restartLocationMonitoring();
         }
     }
@@ -314,7 +307,6 @@ public class G implements APIMethods {
     @Override
     public void setFastestInterval(int timeSeconds) {
         mFastestLocationUpdateIntervalSeconds = timeSeconds;
-        mFastestLocationUpdateIntervalMilliseconds = timeSeconds * 1_000;
 
     }
 
@@ -354,11 +346,11 @@ public class G implements APIMethods {
         // inexact. You may not receive updates at all if no location sources are available, or
         // you may receive them slower than requested. You may also receive updates faster than
         // requested if other applications are requesting location at a faster interval.
-        mLocationRequest.setInterval(mLocationUpdateIntervalMilliseconds);
+        mLocationRequest.setInterval(mLocationUpdateIntervalSeconds * 1000);
 
         // Sets the fastest rate for active location updates. This interval is exact, and your
         // application will never receive updates faster than this value.
-        mLocationRequest.setFastestInterval(mFastestLocationUpdateIntervalMilliseconds);
+        mLocationRequest.setFastestInterval(mFastestLocationUpdateIntervalSeconds * 1000);
 
         mLocationRequest.setPriority(mPriority);
     }
@@ -372,52 +364,54 @@ public class G implements APIMethods {
             public void onLocationResult(final LocationResult locationResult) {
                 super.onLocationResult(locationResult);
 
-                mTicksStateUpdate = TicksStateUpdate.GREEN;
-                mListenerGClient.onMonitoringStateChanged(mTicksStateUpdate);
+                mHeartbeatsState = TicksStateUpdate.GREEN;
+                mListenerGClient.onMonitoringStateChanged(mHeartbeatsState);
 
-                mIsThereAnyUpdates = true;
-                stopMetaDataTimer();
-                startMetaDataTimer();
+                mCurrentlyReceivingHealthyGoogleHeartbeats = true;
+                stopHeartbeatsTimer();
+                startHeartbeatsTimer();
 
-                if (mCurrentLocation == null) {
+                if (mCircleCentre == null) {
                     Log.d(TAG, "onLocationResult: first location update");
                     //this means this is the first location we received
-                    mCurrentLocation = locationResult.getLastLocation();
-                    mLocationArrayList.add(mCurrentLocation);
-                    //sets the first mDistance with zero value of threshold mDistance
-                    sendLocationAndTime();
-                    deliverQuietCircleRadiusParameters(mDistance);
+                    mCircleCentre = locationResult.getLastLocation();
+                    mInCircleLocationJourney.clear();
+                    mInCircleLocationJourney.add(mCircleCentre);
+                    //sets the first mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres with zero value of threshold mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres
+                    deliverBroadcastAndInternalLocations();
+                    deliverQuietCircleRadiusParameters(mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres);
                     deliverQuietCircleExpiryParameter();
-                    createHandlerAndRunnable();
-                    stopThresholdTimer();
-                    startThresholdTimer();
+                    createSilentCircleHandlerAndRunnable();
+                    stopSilentCircleTimer();
+                    startSilentCircleTimer();
                     mListenerGClient.resetServerTimer();
                 } else {
                     Log.d(TAG, "onLocationResult: new location update");
                     //we already received a previous location,
                     //we need to make sure that the new location should be broad-casted or not
-                    mNewLocation = locationResult.getLastLocation();
-                    mDistance = 1000 * GeoUtils.haversineDistance_km(
-                            mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude(),
-                            mNewLocation.getLatitude(), mNewLocation.getLongitude());
-                    mLocationArrayList.add(mNewLocation);
+                    mCurrentPhoneLocation = locationResult.getLastLocation();
+                    mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres = 1000 * GeoUtils.haversineDistance_km(
+                            mCircleCentre.getLatitude(), mCircleCentre.getLongitude(),
+                            mCurrentPhoneLocation.getLatitude(), mCurrentPhoneLocation.getLongitude());
+                    mInCircleLocationJourney.add(mCurrentPhoneLocation);
 
-                    deliverQuietCircleRadiusParameters(mDistance);
+                    deliverQuietCircleRadiusParameters(mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres);
                     deliverQuietCircleExpiryParameter();
 
-                    if (mDistance > mSilentCircleThresholdRadius) {
+                    if (mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres > mSilentCircleThresholdRadius) {
                         Log.d(TAG, "onLocationResult: broadcast tick");
                         // this means that the client have moved out of the radius we determined
-                        mCurrentLocation = mNewLocation;
-                        sendLocationAndTime();
-                        stopThresholdTimer();
-                        startThresholdTimer();
+                        mCircleCentre = mCurrentPhoneLocation;
+                        mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres=0;
+                        deliverBroadcastAndInternalLocations();
+                        stopSilentCircleTimer();
+                        startSilentCircleTimer();
                         mListenerGClient.resetServerTimer();
                     } else {
                         Log.d(TAG, "onLocationResult: silent tick");
                         //deliver silent consuming of ticks
                         mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-                        mListenerGClient.deliverSilentTick(mNewLocation, mLastUpdateTime);
+                        mListenerGClient.deliverInternalTick(mCurrentPhoneLocation, mLastUpdateTime);
                     }
 
                 }
@@ -427,11 +421,11 @@ public class G implements APIMethods {
             public void onLocationAvailability(LocationAvailability locationAvailability) {
                 boolean isLocationAvailable = locationAvailability.isLocationAvailable();
                 if (isLocationAvailable) {
-                    mConnectionState = GoogleConnectionState.CONNECTED_TO_GOOGLE_LOCATION_API;
-                    mListenerGClient.onchangeInGoogleStateConnection(mConnectionState);
+                    mGoogleConnectionState = GoogleConnectionState.CONNECTED_TO_GOOGLE_LOCATION_API;
+                    mListenerGClient.onchangeInGoogleStateConnection(mGoogleConnectionState);
                 } else {
-                    mConnectionState = GoogleConnectionState.GOOGLE_UPDATE_UNAVAILABLE;
-                    mListenerGClient.onchangeInGoogleStateConnection(mConnectionState);
+                    mGoogleConnectionState = GoogleConnectionState.GOOGLE_UPDATE_UNAVAILABLE;
+                    mListenerGClient.onchangeInGoogleStateConnection(mGoogleConnectionState);
                 }
             }
         };
@@ -450,68 +444,67 @@ public class G implements APIMethods {
     /**
      * starts the timer with the value of threshold time as seconds
      */
-    private void startThresholdTimer() {
-        mThresholdTimeHandler.postDelayed(mThresholdTimeRunnable, mSilentCircleThresholdTime * 1_000);
+    private void startSilentCircleTimer() {
+        mSilentCircleTimeHandler.postDelayed(mSilentCircleTimeRunnable, mSilentCircleThresholdTime * 1_000);
     }
 
     /**
      * starts the timer with the value of scaling factor * threshold time as seconds
      */
-    private void startMetaDataTimer() {
-        long metaDataTime = (long) (mLocationUpdateIntervalSeconds * mScalingFactor);
-        mMetaDataHandler.postDelayed(mMetaDataRunnable, metaDataTime * 1_000);
+    private void startHeartbeatsTimer() {
+        long heartbeatTimeerInterval = (long) (mLocationUpdateIntervalSeconds * mHeartbeatTimerScalingFactor);
+        mGoogleUpdatesHeartbeatTimerHandler.postDelayed(mGoogleUpdatesHeartbeatRunnable, heartbeatTimeerInterval * 1_000);
     }
 
     /**
      * stop the current timer if running and empty the list of locations we have
      */
-    private void stopThresholdTimer() {
-        mThresholdTimeHandler.removeCallbacks(mThresholdTimeRunnable);
-        mDistance = 0;
-        mLocationArrayList.clear();
+    private void stopSilentCircleTimer() {
+        mSilentCircleTimeHandler.removeCallbacks(mSilentCircleTimeRunnable);
+        mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres = 0;
+        mInCircleLocationJourney.clear();
     }
 
     /**
      * stop
      */
-    private void stopMetaDataTimer() {
-        mMetaDataHandler.removeCallbacks(mMetaDataRunnable);
+    private void stopHeartbeatsTimer() {
+        mGoogleUpdatesHeartbeatTimerHandler.removeCallbacks(mGoogleUpdatesHeartbeatRunnable);
     }
 
-    private void createHandlerAndRunnable() {
-        mThresholdTimeHandler = new Handler();
-        mThresholdTimeRunnable = new Runnable() {
+    private void createSilentCircleHandlerAndRunnable() {
+        mSilentCircleTimeHandler = new Handler();
+        mSilentCircleTimeRunnable = new Runnable() {
             @Override
             public void run() {
                 // if the we reached the threshold time we should
                 // send the location and reset the timer
-                sendLocationAndTime();
-                mLocationArrayList.add(mCurrentLocation);
-                startThresholdTimer();
-                mIsThereAnyUpdates = false;
+                deliverBroadcastAndInternalLocations();
+                startSilentCircleTimer();
                 Log.d(TAG, "run: threshold timer Fires");
             }
         };
 
-        mMetaDataHandler = new Handler();
-        mMetaDataRunnable = new Runnable() {
+        mGoogleUpdatesHeartbeatTimerHandler = new Handler();
+        mGoogleUpdatesHeartbeatRunnable = new Runnable() {
             @Override
             public void run() {
                 Log.d(TAG, "run: metadata timer Fires");
-                if (mIsThereAnyUpdates) {
-                    mTicksStateUpdate = TicksStateUpdate.GREEN;
-                    mListenerGClient.onMonitoringStateChanged(mTicksStateUpdate);
+                if (mCurrentlyReceivingHealthyGoogleHeartbeats) {
+                    mHeartbeatsState = TicksStateUpdate.GREEN;
+                    mListenerGClient.onMonitoringStateChanged(mHeartbeatsState);
                 } else {
-                    mTicksStateUpdate = TicksStateUpdate.ORANGE;
-                    mListenerGClient.onMonitoringStateChanged(mTicksStateUpdate);
+                    mHeartbeatsState = TicksStateUpdate.ORANGE;
+                    mListenerGClient.onMonitoringStateChanged(mHeartbeatsState);
                 }
             }
         };
     }
 
-    private void sendLocationAndTime() {
+    private void deliverBroadcastAndInternalLocations() {
         mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-        mListenerGClient.deliverNewLocationUpdate(mCurrentLocation, mLastUpdateTime);
+        mListenerGClient.deliverBroadcastLocationUpdate(mCircleCentre, mLastUpdateTime);
+        mListenerGClient.deliverInternalTick(mCurrentPhoneLocation, mLastUpdateTime);
     }
 
     /**
@@ -542,8 +535,8 @@ public class G implements APIMethods {
                                 != PackageManager.PERMISSION_GRANTED &&
                                 ActivityCompat.checkSelfPermission((Context) mListenerGClient, Manifest.permission.ACCESS_COARSE_LOCATION)
                                         != PackageManager.PERMISSION_GRANTED) {
-                            mConnectionState = GoogleConnectionState.GOOGLE_INIT_CONNECT_FAILURE_TO_ESTABLISH_CONNECTION;
-                            mListenerGClient.onchangeInGoogleStateConnection(mConnectionState);
+                            mGoogleConnectionState = GoogleConnectionState.GOOGLE_INIT_CONNECT_FAILURE_TO_ESTABLISH_CONNECTION;
+                            mListenerGClient.onchangeInGoogleStateConnection(mGoogleConnectionState);
                             return;
                         }
                         mFusedLocationClient.requestLocationUpdates(mLocationRequest,
@@ -566,14 +559,14 @@ public class G implements APIMethods {
                                     rae.startResolutionForResult((Activity) mListenerGClient, REQUEST_CHECK_SETTINGS);
                                 } catch (IntentSender.SendIntentException sie) {
                                     Log.i(TAG, "PendingIntent unable to execute request.");
-                                    mConnectionState = GoogleConnectionState.GOOGLE_INIT_CONNECT_FAILURE_TO_ESTABLISH_CONNECTION;
-                                    mListenerGClient.onchangeInGoogleStateConnection(mConnectionState);
+                                    mGoogleConnectionState = GoogleConnectionState.GOOGLE_INIT_CONNECT_FAILURE_TO_ESTABLISH_CONNECTION;
+                                    mListenerGClient.onchangeInGoogleStateConnection(mGoogleConnectionState);
                                 }
                                 break;
                             //Location settings are inadequate, and cannot be fixed here. Fix in Settings
                             case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE: {
-                                mConnectionState = GoogleConnectionState.GOOGLE_INIT_CONNECT_FAILURE_TO_ESTABLISH_CONNECTION;
-                                mListenerGClient.onchangeInGoogleStateConnection(mConnectionState);
+                                mGoogleConnectionState = GoogleConnectionState.GOOGLE_INIT_CONNECT_FAILURE_TO_ESTABLISH_CONNECTION;
+                                mListenerGClient.onchangeInGoogleStateConnection(mGoogleConnectionState);
                             }
                         }
 

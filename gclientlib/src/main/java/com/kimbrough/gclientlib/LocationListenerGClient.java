@@ -9,13 +9,13 @@ import android.location.Location;
 
 public interface LocationListenerGClient {
 
-    void deliverNewLocationUpdate(Location location, String mLastUpdateTime);
+    void deliverBroadcastLocationUpdate(Location location, String mLastUpdateTime);
 
     void onLibraryStateChanged();
 
     void onMonitoringStateChanged(TicksStateUpdate ticksStateUpdate);
 
-    void deliverSilentTick(Location location, String lastUpdateTime);
+    void deliverInternalTick(Location location, String lastUpdateTime);
 
     void deliverQuietCircleExpiryParameter(int timerTime, int thresholdTime);
 

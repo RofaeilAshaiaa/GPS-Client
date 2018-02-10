@@ -187,7 +187,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
     }
 
     @Override
-    public void deliverNewLocationUpdate(Location location, String mLastUpdateTime) {
+    public void deliverBroadcastLocationUpdate(Location location, String mLastUpdateTime) {
 
         String value = "<" + location.getLatitude()
                 + ", " + location.getLongitude()
@@ -234,7 +234,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
     }
 
     @Override
-    public void deliverSilentTick(Location location, String lastUpdateTime) {
+    public void deliverInternalTick(Location location, String lastUpdateTime) {
 
         String value = "<" + location.getLatitude()
                 + ", " + location.getLongitude()

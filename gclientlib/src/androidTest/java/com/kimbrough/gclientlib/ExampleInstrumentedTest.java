@@ -25,7 +25,7 @@ public class ExampleInstrumentedTest {
 
         G guser = new G(new LocationListenerGClient() {
             @Override
-            public void deliverNewLocationUpdate(Location location, String mLastUpdateTime) {
+            public void deliverBroadcastLocationUpdate(Location location, String mLastUpdateTime) {
 
             }
 
@@ -41,7 +41,7 @@ public class ExampleInstrumentedTest {
             }
 
             @Override
-            public void deliverSilentTick(Location location, String lastUpdateTime) {
+            public void deliverInternalTick(Location location, String lastUpdateTime) {
 
             }
 
