@@ -10,7 +10,14 @@ public class Utils {
         return degrees * Math.PI / 180;
     }
 
-    public static double distanceInKmBetweenEarthCoordinates(double lat1, double lon1, double lat2, double lon2) {
+/*    Haversine
+    formula:	a = sin²(Δφ/2) + cos φ1 ⋅ cos φ2 ⋅ sin²(Δλ/2)
+    c = 2 ⋅ atan2( √a, √(1−a) )
+    d = R ⋅ c
+    where	φ is latitude, λ is longitude, R is earth’s radius (mean radius = 6,371km);
+    note that angles need to be in radians
+   */
+    public static double haversineDistance_km(double lat1, double lon1, double lat2, double lon2) {
         double earthRadiusKm = 6371;
 
         double dLat = degreesToRadians(lat2 - lat1);
