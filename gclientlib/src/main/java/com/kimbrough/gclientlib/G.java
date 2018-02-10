@@ -27,9 +27,10 @@ import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
-import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 import static com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY;
 
@@ -82,7 +83,7 @@ public class G implements APIMethods {
     /**
      * Time when the location was updated via the Google location API. Represented as a String.
      */
-    private String mLastUpdateTime;
+    private Date mLastUpdateTime;
     /**
      * State variable indicating if the library is switched on and ready for use
      */
@@ -170,6 +171,7 @@ public class G implements APIMethods {
      * i.e.reflect whether we are currently experiencing the ticks at the rate we expect
      */
     private TicksStateUpdate mHeartbeatsState;
+    private Calendar calendar = Calendar.getInstance(Locale.ENGLISH);
 
     public G(final LocationListenerGClient listenerGClient) {
         this.mListenerGClient = listenerGClient;
@@ -366,6 +368,7 @@ public class G implements APIMethods {
 
                 mHeartbeatsState = TicksStateUpdate.GREEN;
                 mListenerGClient.onMonitoringStateChanged(mHeartbeatsState);
+                mCurrentPhoneLocation = locationResult.getLastLocation();
 
                 mCurrentlyReceivingHealthyGoogleHeartbeats = true;
                 stopHeartbeatsTimer();
@@ -374,7 +377,7 @@ public class G implements APIMethods {
                 if (mCircleCentre == null) {
                     Log.d(TAG, "onLocationResult: first location update");
                     //this means this is the first location we received
-                    mCircleCentre = locationResult.getLastLocation();
+                    mCircleCentre = mCurrentPhoneLocation;
                     mInCircleLocationJourney.clear();
                     mInCircleLocationJourney.add(mCircleCentre);
                     //sets the first mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres with zero value of threshold mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres
@@ -389,7 +392,6 @@ public class G implements APIMethods {
                     Log.d(TAG, "onLocationResult: new location update");
                     //we already received a previous location,
                     //we need to make sure that the new location should be broad-casted or not
-                    mCurrentPhoneLocation = locationResult.getLastLocation();
                     mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres = 1000 * GeoUtils.haversineDistance_km(
                             mCircleCentre.getLatitude(), mCircleCentre.getLongitude(),
                             mCurrentPhoneLocation.getLatitude(), mCurrentPhoneLocation.getLongitude());
@@ -410,7 +412,7 @@ public class G implements APIMethods {
                     } else {
                         Log.d(TAG, "onLocationResult: silent tick");
                         //deliver silent consuming of ticks
-                        mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+                        mLastUpdateTime = calendar.getTime();
                         mListenerGClient.deliverInternalTick(mCurrentPhoneLocation, mLastUpdateTime);
                     }
 
@@ -502,7 +504,7 @@ public class G implements APIMethods {
     }
 
     private void deliverBroadcastAndInternalLocations() {
-        mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+        mLastUpdateTime = calendar.getTime();
         mListenerGClient.deliverBroadcastLocationUpdate(mCircleCentre, mLastUpdateTime);
         mListenerGClient.deliverInternalTick(mCurrentPhoneLocation, mLastUpdateTime);
     }

@@ -8,6 +8,8 @@ import com.google.android.gms.location.LocationRequest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Date;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -25,7 +27,7 @@ public class ExampleInstrumentedTest {
 
         G guser = new G(new LocationListenerGClient() {
             @Override
-            public void deliverBroadcastLocationUpdate(Location location, String mLastUpdateTime) {
+            public void deliverBroadcastLocationUpdate(Location location, Date mLastUpdateTime) {
 
             }
 
@@ -41,7 +43,7 @@ public class ExampleInstrumentedTest {
             }
 
             @Override
-            public void deliverInternalTick(Location location, String lastUpdateTime) {
+            public void deliverInternalTick(Location location, Date lastUpdateTime) {
 
             }
 

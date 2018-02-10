@@ -20,7 +20,11 @@ import com.kimbrough.gclientlib.LocationListenerGClient;
 import com.kimbrough.gclientlib.TicksStateUpdate;
 import com.kimbrough_app.gactivity.databinding.ActivityMainBinding;
 
+import java.text.DateFormat;
 import java.text.MessageFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
 import static com.google.android.gms.location.LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY;
 import static com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY;
@@ -40,16 +44,20 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
     private int thresholdTime = -1;
     private int thresholdDistance = -1;
     private ActivityMainBinding mMainBinding;
-    private int mServerTimer= 1;
+    private int mCountdownTimer = 0;
     // handler for threshold time
-    private Handler mServerHandler;
+    private Handler mCountdownTimerHandler;
     // runnable for threshold time
-    private Runnable mServerRunnable;
+    private Runnable mCountdownTimerRunnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Calendar calendar = Calendar.getInstance(Locale.ENGLISH);
+        Date date = calendar.getTime();
+        String s =  DateFormat.getTimeInstance().format(date);
 
         mMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
@@ -89,8 +97,11 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
             public void onClick(View view) {
                 String time = mMainBinding.thresholdTimeEditText.getText().toString();
                 if (!time.trim().isEmpty()) {
-                    int timeValue = Integer.parseInt(time);
-                    mLocationManager.setThresholdTime(timeValue);
+                    thresholdTime = Integer.parseInt(time);
+                    mLocationManager.setThresholdTime(thresholdTime);
+                    stopCountdownTimerTimer();
+                    resetServerTimer();
+                    startCountdownTimerTimer();
                 }
             }
         });
@@ -120,12 +131,11 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
                     if (!time.trim().isEmpty()) {
                         thresholdTime = Integer.parseInt(time);
                         mLocationManager.setThresholdTime(thresholdTime);
-                    }else {
+                    } else {
                         thresholdTime = mLocationManager.getThresholdTime();
                     }
 
                     mLocationManager.activateLibrary();
-                    startServerTimer();
 
                 } else {
                     requestPermissions();
@@ -138,7 +148,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
             @Override
             public void onClick(View view) {
                 mLocationManager.deactivateLibrary();
-                stopServerTimer();
+                stopCountdownTimerTimer();
 
             }
         });
@@ -177,21 +187,21 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
 
     }
 
-    private void stopServerTimer() {
-        mServerHandler.removeCallbacks(mServerRunnable);
+    private void stopCountdownTimerTimer() {
+        mCountdownTimerHandler.removeCallbacks(mCountdownTimerRunnable);
     }
 
-    private void startServerTimer() {
-
-        mServerHandler.postDelayed(mServerRunnable, 1_000);
+    private void startCountdownTimerTimer() {
+//        mCountdownTimerHandler.postDelayed(mCountdownTimerRunnable, 1_000);
+        mCountdownTimerHandler.post(mCountdownTimerRunnable);
     }
 
     @Override
-    public void deliverBroadcastLocationUpdate(Location location, String mLastUpdateTime) {
-
+    public void deliverBroadcastLocationUpdate(Location location, Date lastUpdateTime) {
+        String formattedDate =  DateFormat.getTimeInstance().format(lastUpdateTime);
         String value = "<" + location.getLatitude()
                 + ", " + location.getLongitude()
-                + ", " + mLastUpdateTime
+                + ", " + formattedDate
                 + ">";
 
         mMainBinding.lastKnownLocation.setText(value);
@@ -201,9 +211,14 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
     public void onLibraryStateChanged() {
         if (mLocationManager.isLibraryActivated()) {
             mMainBinding.isLibraryActivated.setText(R.string.on_label);
-            mServerHandler.post(mServerRunnable);
+            mMainBinding.isLibraryActivated.setBackgroundColor(
+                    ContextCompat.getColor(this, R.color.green));
+            startCountdownTimerTimer();
         } else {
             mMainBinding.isLibraryActivated.setText(R.string.off_label);
+            mMainBinding.isLibraryActivated.setBackgroundColor(
+                    ContextCompat.getColor(this, R.color.red));
+            stopCountdownTimerTimer();
         }
     }
 
@@ -211,41 +226,37 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
     public void onMonitoringStateChanged(TicksStateUpdate ticksStateUpdate) {
 
         switch (ticksStateUpdate) {
-
             case RED:
                 mMainBinding.areWeMointoringForLocationUpdates.setText("R");
                 mMainBinding.areWeMointoringForLocationUpdates.setBackgroundColor(
                         ContextCompat.getColor(this, R.color.red));
                 break;
-
             case GREEN:
                 mMainBinding.areWeMointoringForLocationUpdates.setText("G");
                 mMainBinding.areWeMointoringForLocationUpdates.setBackgroundColor(
                         ContextCompat.getColor(this, R.color.green));
                 break;
-
             case ORANGE:
                 mMainBinding.areWeMointoringForLocationUpdates.setBackgroundColor(
                         ContextCompat.getColor(this, R.color.orange));
-
                 mMainBinding.areWeMointoringForLocationUpdates.setText("O");
                 break;
         }
     }
 
     @Override
-    public void deliverInternalTick(Location location, String lastUpdateTime) {
-
+    public void deliverInternalTick(Location location, Date lastUpdateTime) {
+        String formattedDate =  DateFormat.getTimeInstance().format(lastUpdateTime);
         String value = "<" + location.getLatitude()
                 + ", " + location.getLongitude()
-                + ", " + lastUpdateTime
+                + ", " + formattedDate
                 + ">";
         mMainBinding.silentTicks.setText(value);
     }
 
     @Override
     public void deliverQuietCircleExpiryParameter(int timerTime, int thresholdTime) {
-        mMainBinding.thetaTimeValue.setText(MessageFormat.format("{0}/{1}s", mServerTimer, thresholdTime));
+        mMainBinding.thetaTimeValue.setText(MessageFormat.format("{0}/{1}s", mCountdownTimer, thresholdTime));
     }
 
     @Override
@@ -294,7 +305,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
 
     @Override
     public void resetServerTimer() {
-        mServerTimer = 1;
+        mCountdownTimer = 0;
     }
 
     /**
@@ -318,14 +329,14 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
     }
 
     private void createHandlerAndRunnable() {
-        mServerHandler = new Handler();
-        mServerRunnable = new Runnable() {
+        mCountdownTimerHandler = new Handler();
+        mCountdownTimerRunnable = new Runnable() {
             @Override
             public void run() {
 
-                    mServerTimer++;
-                    mServerHandler.postDelayed(mServerRunnable, thresholdTime * 1_000);
-
+                mMainBinding.thetaTimeValue.setText(MessageFormat.format("{0}/{1}s", mCountdownTimer, thresholdTime));
+                mCountdownTimer++;
+                mCountdownTimerHandler.postDelayed(mCountdownTimerRunnable, 1_000);
             }
         };
 
