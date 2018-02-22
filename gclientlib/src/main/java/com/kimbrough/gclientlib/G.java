@@ -153,14 +153,6 @@ public class G implements APIMethods {
      */
     private double mHeartbeatTimerScalingFactor = 1.5;
     /**
-     * timer for internal state updates(metadata)
-     */
-    private int mTicksTimer = 0;
-    /**
-     * for counting seconds that pass and determining in which second we are
-     */
-    private int mSateTimer = 0;
-    /**
      * indicates whether we received any location updates in threshold time or not
      */
     private boolean mCurrentlyReceivingHealthyGoogleHeartbeats = false;
@@ -480,6 +472,10 @@ public class G implements APIMethods {
                 // send the location and reset the timer
                 deliverBroadcastAndInternalLocations();
                 startSilentCircleTimer();
+                //when the this timer fires we recenter the radius of the circle to the last google
+                // tick despite of it's a broadcast tick or silent tick
+                mCircleCentre = mCurrentPhoneLocation;
+                mInCircleLocationJourney.clear();
                 Log.d(TAG, "run: threshold timer Fires");
             }
         };
