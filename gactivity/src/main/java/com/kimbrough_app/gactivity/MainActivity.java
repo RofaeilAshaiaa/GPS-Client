@@ -18,6 +18,7 @@ import com.kimbrough.gclientlib.G;
 import com.kimbrough.gclientlib.GoogleConnectionState;
 import com.kimbrough.gclientlib.LocationListenerGClient;
 import com.kimbrough.gclientlib.TicksStateUpdate;
+import com.kimbrough.gclientlib.Utils;
 import com.kimbrough_app.gactivity.databinding.ActivityMainBinding;
 
 import java.text.DateFormat;
@@ -25,6 +26,7 @@ import java.text.MessageFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.android.gms.location.LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY;
 import static com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY;
@@ -44,7 +46,6 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
     private int thresholdTime = -1;
     private int thresholdDistance = -1;
     private ActivityMainBinding mMainBinding;
-    private int mCountdownTimer = 0;
     // handler for threshold time
     private Handler mCountdownTimerHandler;
     // runnable for threshold time
@@ -57,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
 
         Calendar calendar = Calendar.getInstance(Locale.ENGLISH);
         Date date = calendar.getTime();
-        String s =  DateFormat.getTimeInstance().format(date);
+        String s = DateFormat.getTimeInstance().format(date);
 
         mMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
@@ -99,9 +100,6 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
                 if (!time.trim().isEmpty()) {
                     thresholdTime = Integer.parseInt(time);
                     mLocationManager.setThresholdTime(thresholdTime);
-                    stopCountdownTimerTimer();
-                    resetServerTimer();
-                    startCountdownTimerTimer();
                 }
             }
         });
@@ -198,7 +196,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
 
     @Override
     public void deliverBroadcastLocationUpdate(Location location, Date lastUpdateTime) {
-        String formattedDate =  DateFormat.getTimeInstance().format(lastUpdateTime);
+        String formattedDate = DateFormat.getTimeInstance().format(lastUpdateTime);
         String value = "<" + location.getLatitude()
                 + ", " + location.getLongitude()
                 + ", " + formattedDate
@@ -246,7 +244,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
 
     @Override
     public void deliverInternalTick(Location location, Date lastUpdateTime) {
-        String formattedDate =  DateFormat.getTimeInstance().format(lastUpdateTime);
+        String formattedDate = DateFormat.getTimeInstance().format(lastUpdateTime);
         String value = "<" + location.getLatitude()
                 + ", " + location.getLongitude()
                 + ", " + formattedDate
@@ -256,7 +254,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
 
     @Override
     public void deliverQuietCircleExpiryParameter(int timerTime, int thresholdTime) {
-        mMainBinding.thetaTimeValue.setText(MessageFormat.format("{0}/{1}s", mCountdownTimer, thresholdTime));
+//        mMainBinding.thetaTimeValue.setText(MessageFormat.format("{0}/{1}s", , thresholdTime));
     }
 
     @Override
@@ -305,7 +303,6 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
 
     @Override
     public void resetServerTimer() {
-        mCountdownTimer = 0;
     }
 
     /**
@@ -333,13 +330,16 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
         mCountdownTimerRunnable = new Runnable() {
             @Override
             public void run() {
-
-                mMainBinding.thetaTimeValue.setText(MessageFormat.format("{0}/{1}s", mCountdownTimer, thresholdTime));
-                mCountdownTimer++;
+                Date date = mLocationManager.getLastUpdateTime();
+                if (date != null) {
+                    long seconds = Utils.getDateDiff(
+                            date, Calendar.getInstance(Locale.ENGLISH).getTime(), TimeUnit.SECONDS);
+                    mMainBinding.thetaTimeValue.setText(
+                            MessageFormat.format("{0}/{1}s", Long.toString(seconds), thresholdTime));
+                }
                 mCountdownTimerHandler.postDelayed(mCountdownTimerRunnable, 1_000);
             }
         };
 
     }
-
 }

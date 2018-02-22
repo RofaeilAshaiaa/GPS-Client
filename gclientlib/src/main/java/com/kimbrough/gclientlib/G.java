@@ -46,7 +46,6 @@ public class G implements APIMethods {
      * Constant used in the location settings dialog.
      */
     private static final int REQUEST_CHECK_SETTINGS = 0x9;
-
     /**
      * desired interval for location updates in seconds
      */
@@ -63,7 +62,6 @@ public class G implements APIMethods {
      * determine the priority of location updates request
      */
     private int mPriority = PRIORITY_HIGH_ACCURACY;
-
     /**
      * desired fastest interval for location updates in seconds
      */
@@ -81,7 +79,7 @@ public class G implements APIMethods {
      */
     private double mSilentCircleThresholdRadius = 5;
     /**
-     * Time when the location was updated via the Google location API. Represented as a String.
+     * Time when the location was updated via the Google location API. Represented as a Date.
      */
     private Date mLastUpdateTime;
     /**
@@ -89,7 +87,7 @@ public class G implements APIMethods {
      */
     private boolean mIsLibraryActivated;
     /**
-     * mListenerGClient to receive location updates from Google loctation API
+     * mListenerGClient to receive location updates from Google lactation API
      */
     private LocationListenerGClient mListenerGClient;
     /**
@@ -171,7 +169,6 @@ public class G implements APIMethods {
      * i.e.reflect whether we are currently experiencing the ticks at the rate we expect
      */
     private TicksStateUpdate mHeartbeatsState;
-    private Calendar calendar = Calendar.getInstance(Locale.ENGLISH);
 
     public G(final LocationListenerGClient listenerGClient) {
         this.mListenerGClient = listenerGClient;
@@ -309,7 +306,6 @@ public class G implements APIMethods {
     @Override
     public void setFastestInterval(int timeSeconds) {
         mFastestLocationUpdateIntervalSeconds = timeSeconds;
-
     }
 
     @Override
@@ -387,6 +383,7 @@ public class G implements APIMethods {
                     createSilentCircleHandlerAndRunnable();
                     stopSilentCircleTimer();
                     startSilentCircleTimer();
+                    //TODO remove this call back form listener
                     mListenerGClient.resetServerTimer();
                 } else {
                     Log.d(TAG, "onLocationResult: new location update");
@@ -412,7 +409,7 @@ public class G implements APIMethods {
                     } else {
                         Log.d(TAG, "onLocationResult: silent tick");
                         //deliver silent consuming of ticks
-                        mLastUpdateTime = calendar.getTime();
+                        mLastUpdateTime = Calendar.getInstance(Locale.ENGLISH).getTime();
                         mListenerGClient.deliverInternalTick(mCurrentPhoneLocation, mLastUpdateTime);
                     }
 
@@ -451,11 +448,11 @@ public class G implements APIMethods {
     }
 
     /**
-     * starts the timer with the value of scaling factor * threshold time as seconds
+     * starts the timer with the value of scaling factor * location update interval time as seconds
      */
     private void startHeartbeatsTimer() {
-        long heartbeatTimeerInterval = (long) (mLocationUpdateIntervalSeconds * mHeartbeatTimerScalingFactor);
-        mGoogleUpdatesHeartbeatTimerHandler.postDelayed(mGoogleUpdatesHeartbeatRunnable, heartbeatTimeerInterval * 1_000);
+        long heartbeatTimerInterval = (long) (mLocationUpdateIntervalSeconds * mHeartbeatTimerScalingFactor);
+        mGoogleUpdatesHeartbeatTimerHandler.postDelayed(mGoogleUpdatesHeartbeatRunnable, heartbeatTimerInterval * 1_000);
     }
 
     /**
@@ -468,7 +465,7 @@ public class G implements APIMethods {
     }
 
     /**
-     * stop
+     * stop heartbeats timer
      */
     private void stopHeartbeatsTimer() {
         mGoogleUpdatesHeartbeatTimerHandler.removeCallbacks(mGoogleUpdatesHeartbeatRunnable);
@@ -479,7 +476,7 @@ public class G implements APIMethods {
         mSilentCircleTimeRunnable = new Runnable() {
             @Override
             public void run() {
-                // if the we reached the threshold time we should
+                // if we reached the threshold time we should
                 // send the location and reset the timer
                 deliverBroadcastAndInternalLocations();
                 startSilentCircleTimer();
@@ -504,7 +501,7 @@ public class G implements APIMethods {
     }
 
     private void deliverBroadcastAndInternalLocations() {
-        mLastUpdateTime = calendar.getTime();
+        mLastUpdateTime = Calendar.getInstance(Locale.ENGLISH).getTime();
         mListenerGClient.deliverBroadcastLocationUpdate(mCircleCentre, mLastUpdateTime);
         mListenerGClient.deliverInternalTick(mCurrentPhoneLocation, mLastUpdateTime);
     }
@@ -576,4 +573,7 @@ public class G implements APIMethods {
                 });
     }
 
+    public Date getLastUpdateTime() {
+        return mLastUpdateTime;
+    }
 }
