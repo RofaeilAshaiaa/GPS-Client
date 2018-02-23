@@ -190,7 +190,6 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
     }
 
     private void startCountdownTimerTimer() {
-//        mCountdownTimerHandler.postDelayed(mCountdownTimerRunnable, 1_000);
         mCountdownTimerHandler.post(mCountdownTimerRunnable);
     }
 
@@ -259,6 +258,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
 
     @Override
     public void deliverQuietCircleRadiusParameters(double distance, double thresholdRadius) {
+//        if(distance != 0)
         mMainBinding.thetaCircValue.setText(MessageFormat.format("{0}/{1}m", distance, thresholdRadius));
     }
 

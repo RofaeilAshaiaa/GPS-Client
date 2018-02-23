@@ -83,6 +83,10 @@ public class G implements APIMethods {
      */
     private Date mLastUpdateTime;
     /**
+     * Time when the location was broad-casted via the library, Represented as a Date.
+     */
+    private Date mLastBroadCastTickUpdateTime;
+    /**
      * State variable indicating if the library is switched on and ready for use
      */
     private boolean mIsLibraryActivated;
@@ -361,6 +365,7 @@ public class G implements APIMethods {
                 mCurrentlyReceivingHealthyGoogleHeartbeats = true;
                 stopHeartbeatsTimer();
                 startHeartbeatsTimer();
+                Log.d(TAG, "onLocationResult: "+ mCurrentPhoneLocation.toString());
 
                 if (mCircleCentre == null) {
                     Log.d(TAG, "onLocationResult: first location update");
@@ -369,14 +374,13 @@ public class G implements APIMethods {
                     mInCircleLocationJourney.clear();
                     mInCircleLocationJourney.add(mCircleCentre);
                     //sets the first mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres with zero value of threshold mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres
+                    resetDistanceAndSetLastBroadcastTime();
                     deliverBroadcastAndInternalLocations();
                     deliverQuietCircleRadiusParameters(mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres);
                     deliverQuietCircleExpiryParameter();
                     createSilentCircleHandlerAndRunnable();
                     stopSilentCircleTimer();
                     startSilentCircleTimer();
-                    //TODO remove this call back form listener
-                    mListenerGClient.resetServerTimer();
                 } else {
                     Log.d(TAG, "onLocationResult: new location update");
                     //we already received a previous location,
@@ -384,25 +388,29 @@ public class G implements APIMethods {
                     mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres = 1000 * GeoUtils.haversineDistance_km(
                             mCircleCentre.getLatitude(), mCircleCentre.getLongitude(),
                             mCurrentPhoneLocation.getLatitude(), mCurrentPhoneLocation.getLongitude());
+
+                    Log.d(TAG, "onLocationResult: distance:" + mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres);
                     mInCircleLocationJourney.add(mCurrentPhoneLocation);
 
-                    deliverQuietCircleRadiusParameters(mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres);
-                    deliverQuietCircleExpiryParameter();
 
                     if (mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres > mSilentCircleThresholdRadius) {
                         Log.d(TAG, "onLocationResult: broadcast tick");
                         // this means that the client have moved out of the radius we determined
                         mCircleCentre = mCurrentPhoneLocation;
-                        mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres=0;
+                        deliverQuietCircleRadiusParameters(mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres);
+                        resetDistanceAndSetLastBroadcastTime();
+                        deliverQuietCircleExpiryParameter();
                         deliverBroadcastAndInternalLocations();
                         stopSilentCircleTimer();
                         startSilentCircleTimer();
-                        mListenerGClient.resetServerTimer();
+                        deliverQuietCircleRadiusParameters(mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres);
                     } else {
                         Log.d(TAG, "onLocationResult: silent tick");
                         //deliver silent consuming of ticks
                         mLastUpdateTime = Calendar.getInstance(Locale.ENGLISH).getTime();
                         mListenerGClient.deliverInternalTick(mCurrentPhoneLocation, mLastUpdateTime);
+                        deliverQuietCircleRadiusParameters(mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres);
+                        deliverQuietCircleExpiryParameter();
                     }
 
                 }
@@ -422,10 +430,18 @@ public class G implements APIMethods {
         };
     }
 
+    private void resetDistanceAndSetLastBroadcastTime() {
+        mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres = 0;
+        mLastUpdateTime = Calendar.getInstance(Locale.ENGLISH).getTime();
+        mLastBroadCastTickUpdateTime = mLastUpdateTime;
+        deliverQuietCircleRadiusParameters(mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres);
+    }
+
     private void deliverQuietCircleRadiusParameters(double distance) {
         mListenerGClient.deliverQuietCircleRadiusParameters(distance, mSilentCircleThresholdRadius);
     }
 
+    //TODO remove this callback form listener
     private void deliverQuietCircleExpiryParameter() {
         //deliver time with zero because we had to revert to previous
         // implementation of the timer i.e. timer should fires every second
@@ -468,6 +484,7 @@ public class G implements APIMethods {
         mSilentCircleTimeRunnable = new Runnable() {
             @Override
             public void run() {
+                //TODO reset the distance to 0 here  if we need to rest it when the timer fires
                 // if we reached the threshold time we should
                 // send the location and reset the timer
                 deliverBroadcastAndInternalLocations();
@@ -497,7 +514,6 @@ public class G implements APIMethods {
     }
 
     private void deliverBroadcastAndInternalLocations() {
-        mLastUpdateTime = Calendar.getInstance(Locale.ENGLISH).getTime();
         mListenerGClient.deliverBroadcastLocationUpdate(mCircleCentre, mLastUpdateTime);
         mListenerGClient.deliverInternalTick(mCurrentPhoneLocation, mLastUpdateTime);
     }
@@ -570,6 +586,6 @@ public class G implements APIMethods {
     }
 
     public Date getLastUpdateTime() {
-        return mLastUpdateTime;
+        return mLastBroadCastTickUpdateTime;
     }
 }

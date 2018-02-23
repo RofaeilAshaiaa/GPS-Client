@@ -24,6 +24,4 @@ public interface LocationListenerGClient {
     void deliverQuietCircleRadiusParameters(double distance, double thresholdRadius);
 
     void onchangeInGoogleStateConnection(GoogleConnectionState state);
-
-    void resetServerTimer();
 }
