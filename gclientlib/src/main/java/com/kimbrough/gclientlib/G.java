@@ -365,7 +365,7 @@ public class G implements APIMethods {
                 mCurrentlyReceivingHealthyGoogleHeartbeats = true;
                 stopHeartbeatsTimer();
                 startHeartbeatsTimer();
-                Log.d(TAG, "onLocationResult: "+ mCurrentPhoneLocation.toString());
+                Log.d(TAG, "onLocationResult: " + mCurrentPhoneLocation.toString());
 
                 if (mCircleCentre == null) {
                     Log.d(TAG, "onLocationResult: first location update");
@@ -487,6 +487,7 @@ public class G implements APIMethods {
                 //TODO reset the distance to 0 here  if we need to rest it when the timer fires
                 // if we reached the threshold time we should
                 // send the location and reset the timer
+                resetDistanceAndSetLastBroadcastTime();
                 deliverBroadcastAndInternalLocations();
                 startSilentCircleTimer();
                 //when the this timer fires we recenter the radius of the circle to the last google

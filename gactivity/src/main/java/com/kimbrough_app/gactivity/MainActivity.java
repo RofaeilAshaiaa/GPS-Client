@@ -301,10 +301,6 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
         }
     }
 
-    @Override
-    public void resetServerTimer() {
-    }
-
     /**
      * Return the current state of the permissions needed.
      */
