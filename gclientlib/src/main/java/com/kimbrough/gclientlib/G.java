@@ -199,6 +199,7 @@ public class G implements APIMethods {
     public void deactivateLibrary() {
         stopLocationMonitoring();
         stopSilentCircleTimer();
+        resetDistanceAndLocationsList();
         stopHeartbeatsTimer();
         mCurrentlyReceivingHealthyGoogleHeartbeats = false;
         mIsLibraryActivated = false;
@@ -212,6 +213,11 @@ public class G implements APIMethods {
 
         mGoogleConnectionState = GoogleConnectionState.DISCONNECTED_GOOGLE_API;
         mListenerGClient.onchangeInGoogleStateConnection(mGoogleConnectionState);
+    }
+
+    private void resetDistanceAndLocationsList() {
+        mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres = 0;
+        mInCircleLocationJourney.clear();
     }
 
     @Override
@@ -256,6 +262,8 @@ public class G implements APIMethods {
             // restart location monitoring with the new parameters
             mLocationRequest.setInterval(timeInSeconds * 1_000);
             restartLocationMonitoring();
+            stopHeartbeatsTimer();
+            startHeartbeatsTimer();
         }
     }
 
@@ -282,6 +290,9 @@ public class G implements APIMethods {
     @Override
     public void setThresholdRadius(double distanceInMeters) {
         mSilentCircleThresholdRadius = distanceInMeters;
+        resetDistanceAndLocationsList();
+        mListenerGClient.deliverQuietCircleRadiusParameters(
+                mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres, mSilentCircleThresholdRadius);
     }
 
     @Override
@@ -292,6 +303,10 @@ public class G implements APIMethods {
     @Override
     public void setThresholdTime(int seconds) {
         mSilentCircleThresholdTime = seconds;
+        stopSilentCircleTimer();
+        mLastUpdateTime = Calendar.getInstance(Locale.ENGLISH).getTime();
+        mLastBroadCastTickUpdateTime = mLastUpdateTime;
+        startSilentCircleTimer();
     }
 
     @Override
@@ -377,9 +392,9 @@ public class G implements APIMethods {
                     resetDistanceAndSetLastBroadcastTime();
                     deliverBroadcastAndInternalLocations();
                     deliverQuietCircleRadiusParameters(mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres);
-                    deliverQuietCircleExpiryParameter();
                     createSilentCircleHandlerAndRunnable();
                     stopSilentCircleTimer();
+                    resetDistanceAndLocationsList();
                     startSilentCircleTimer();
                 } else {
                     Log.d(TAG, "onLocationResult: new location update");
@@ -399,9 +414,9 @@ public class G implements APIMethods {
                         mCircleCentre = mCurrentPhoneLocation;
                         deliverQuietCircleRadiusParameters(mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres);
                         resetDistanceAndSetLastBroadcastTime();
-                        deliverQuietCircleExpiryParameter();
                         deliverBroadcastAndInternalLocations();
                         stopSilentCircleTimer();
+                        resetDistanceAndLocationsList();
                         startSilentCircleTimer();
                         deliverQuietCircleRadiusParameters(mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres);
                     } else {
@@ -410,7 +425,6 @@ public class G implements APIMethods {
                         mLastUpdateTime = Calendar.getInstance(Locale.ENGLISH).getTime();
                         mListenerGClient.deliverInternalTick(mCurrentPhoneLocation, mLastUpdateTime);
                         deliverQuietCircleRadiusParameters(mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres);
-                        deliverQuietCircleExpiryParameter();
                     }
 
                 }
@@ -441,13 +455,6 @@ public class G implements APIMethods {
         mListenerGClient.deliverQuietCircleRadiusParameters(distance, mSilentCircleThresholdRadius);
     }
 
-    //TODO remove this callback form listener
-    private void deliverQuietCircleExpiryParameter() {
-        //deliver time with zero because we had to revert to previous
-        // implementation of the timer i.e. timer should fires every second
-        mListenerGClient.deliverQuietCircleExpiryParameter(0, mSilentCircleThresholdTime);
-    }
-
     /**
      * starts the timer with the value of threshold time as seconds
      */
@@ -468,8 +475,6 @@ public class G implements APIMethods {
      */
     private void stopSilentCircleTimer() {
         mSilentCircleTimeHandler.removeCallbacks(mSilentCircleTimeRunnable);
-        mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres = 0;
-        mInCircleLocationJourney.clear();
     }
 
     /**
@@ -484,10 +489,10 @@ public class G implements APIMethods {
         mSilentCircleTimeRunnable = new Runnable() {
             @Override
             public void run() {
-                //TODO reset the distance to 0 here  if we need to rest it when the timer fires
+                // resetting distance and last broadcast time when timer fires
+                resetDistanceAndSetLastBroadcastTime();
                 // if we reached the threshold time we should
                 // send the location and reset the timer
-                resetDistanceAndSetLastBroadcastTime();
                 deliverBroadcastAndInternalLocations();
                 startSilentCircleTimer();
                 //when the this timer fires we recenter the radius of the circle to the last google

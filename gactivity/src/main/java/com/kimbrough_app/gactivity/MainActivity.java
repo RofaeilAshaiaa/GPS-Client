@@ -252,11 +252,6 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
     }
 
     @Override
-    public void deliverQuietCircleExpiryParameter(int timerTime, int thresholdTime) {
-//        mMainBinding.thetaTimeValue.setText(MessageFormat.format("{0}/{1}s", , thresholdTime));
-    }
-
-    @Override
     public void deliverQuietCircleRadiusParameters(double distance, double thresholdRadius) {
 //        if(distance != 0)
         mMainBinding.thetaCircValue.setText(MessageFormat.format("{0}/{1}m", distance, thresholdRadius));
@@ -330,8 +325,8 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
                 if (date != null) {
                     long seconds = Utils.getDateDiff(
                             date, Calendar.getInstance(Locale.ENGLISH).getTime(), TimeUnit.SECONDS);
-                    mMainBinding.thetaTimeValue.setText(
-                            MessageFormat.format("{0}/{1}s", Long.toString(seconds), thresholdTime));
+                    mMainBinding.thetaTimeValue.setText(MessageFormat.format("{0}/{1}s",
+                            Long.toString(seconds), mLocationManager.getThresholdTime()));
                 }
                 mCountdownTimerHandler.postDelayed(mCountdownTimerRunnable, 1_000);
             }

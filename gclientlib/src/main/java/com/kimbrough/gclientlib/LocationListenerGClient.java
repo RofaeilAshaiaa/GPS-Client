@@ -19,8 +19,6 @@ public interface LocationListenerGClient {
 
     void deliverInternalTick(Location location, Date lastUpdateTime);
 
-    void deliverQuietCircleExpiryParameter(int timerTime, int thresholdTime);
-
     void deliverQuietCircleRadiusParameters(double distance, double thresholdRadius);
 
     void onchangeInGoogleStateConnection(GoogleConnectionState state);
