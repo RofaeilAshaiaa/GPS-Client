@@ -1,5 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.kimbrough.gclientlib" >
+    package="com.kimbrough.gclientlib">
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <application>
+
+        <service
+            android:name=".LocationUpdatesForegroundService"
+            android:exported="false">
+
+        </service>
+
+    </application>
 </manifest>

@@ -1,4 +1,4 @@
-package com.kimbrough.gclientlib;
+package com.kimbrough.gclientlib.utils;
 
 /**
  * @author Rofaeil Ashaiaa

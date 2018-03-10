@@ -2,6 +2,9 @@ package com.kimbrough.gclientlib;
 
 import android.location.Location;
 
+import com.kimbrough.gclientlib.helper.GoogleConnectionState;
+import com.kimbrough.gclientlib.helper.TicksStateUpdate;
+
 import java.util.Date;
 
 /**

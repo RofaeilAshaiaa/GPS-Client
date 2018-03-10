@@ -4,6 +4,8 @@ import android.location.Location;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.google.android.gms.location.LocationRequest;
+import com.kimbrough.gclientlib.helper.GoogleConnectionState;
+import com.kimbrough.gclientlib.helper.TicksStateUpdate;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,11 +50,6 @@ public class ExampleInstrumentedTest {
             }
 
             @Override
-            public void deliverQuietCircleExpiryParameter(int timerTime, int thresholdTime) {
-
-            }
-
-            @Override
             public void deliverQuietCircleRadiusParameters(double distance, double thresholdRadius) {
 
             }
@@ -62,10 +59,6 @@ public class ExampleInstrumentedTest {
 
             }
 
-            @Override
-            public void resetServerTimer() {
-
-            }
 
         });
 
@@ -73,7 +66,7 @@ public class ExampleInstrumentedTest {
         assertEquals(20_000, guser.getLocationUpdatesFrequency());
 
         guser.setThresholdRadius(30);
-        assertEquals(30, guser.getThresholdRadius(),0);
+        assertEquals(30, guser.getThresholdRadius(), 0);
 
 
         guser.startMonitoringInBackground();

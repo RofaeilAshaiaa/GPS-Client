@@ -1,5 +1,7 @@
 package com.kimbrough.gclientlib;
 
+import android.app.Activity;
+
 /**
  * @author Rofaeil Ashaiaa
  *         Created on 17/01/18.
@@ -103,7 +105,7 @@ interface APIMethods {
      */
     void setPriority(int priority);
 
-    void activateLibrary();
+    void activateLibrary(Activity activity);
 
     void deactivateLibrary();
 

@@ -2,6 +2,7 @@ package com.kimbrough.gclientlib;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Service;
 import android.content.Context;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -26,6 +27,9 @@ import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.kimbrough.gclientlib.helper.GoogleConnectionState;
+import com.kimbrough.gclientlib.helper.TicksStateUpdate;
+import com.kimbrough.gclientlib.utils.GeoUtils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -46,6 +50,7 @@ public class G implements APIMethods {
      * Constant used in the location settings dialog.
      */
     private static final int REQUEST_CHECK_SETTINGS = 0x9;
+    private Context mContext;
     /**
      * desired interval for location updates in seconds
      */
@@ -166,17 +171,21 @@ public class G implements APIMethods {
      */
     private TicksStateUpdate mHeartbeatsState;
 
+    private volatile Activity mActivity;
+
     public G(final LocationListenerGClient listenerGClient) {
         this.mListenerGClient = listenerGClient;
         mInCircleLocationJourney = new ArrayList<>();
         createSilentCircleHandlerAndRunnable();
 
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient((Activity) mListenerGClient);
-        mSettingsClient = LocationServices.getSettingsClient((Activity) mListenerGClient);
+        mContext = ((Service) mListenerGClient).getApplicationContext();
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(mContext);
+        mSettingsClient = LocationServices.getSettingsClient(mContext);
     }
 
     @Override
-    public void activateLibrary() {
+    public void activateLibrary(Activity activity) {
+        mActivity = activity;
         mIsLibraryActivated = true;
         // Kick off the process of building the LocationCallback, LocationRequest, and
         // LocationSettingsRequest objects.
@@ -333,6 +342,22 @@ public class G implements APIMethods {
             mLocationRequest.setPriority(mPriority);
             restartLocationMonitoring();
         }
+    }
+
+    public GoogleConnectionState getGoogleConnectionState() {
+        return mGoogleConnectionState;
+    }
+
+    public TicksStateUpdate getHeartbeatsState() {
+        return mHeartbeatsState;
+    }
+
+    public double getDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres() {
+        return mDistanceOfPhoneCurrentlyFromSilentCircleCentre_metres;
+    }
+
+    public double getSilentCircleThresholdRadius() {
+        return mSilentCircleThresholdRadius;
     }
 
     /**
@@ -542,7 +567,7 @@ public class G implements APIMethods {
     private void startLocationUpdates() {
         // Begin by checking if the device has the necessary location settings.
         mSettingsClient.checkLocationSettings(mLocationSettingsRequest)
-                .addOnSuccessListener((Activity) mListenerGClient, new OnSuccessListener<LocationSettingsResponse>() {
+                .addOnSuccessListener(new OnSuccessListener<LocationSettingsResponse>() {
                     @Override
                     public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
                         Log.i(TAG, "All location settings are satisfied.");
@@ -561,7 +586,7 @@ public class G implements APIMethods {
 
                     }
                 })
-                .addOnFailureListener((Activity) mListenerGClient, new OnFailureListener() {
+                .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         int statusCode = ((ApiException) e).getStatusCode();
@@ -573,7 +598,7 @@ public class G implements APIMethods {
                                     // Show the dialog by calling startResolutionForResult(), and check the
                                     // result in onActivityResult().
                                     ResolvableApiException rae = (ResolvableApiException) e;
-                                    rae.startResolutionForResult((Activity) mListenerGClient, REQUEST_CHECK_SETTINGS);
+                                    rae.startResolutionForResult(mActivity, REQUEST_CHECK_SETTINGS);
                                 } catch (IntentSender.SendIntentException sie) {
                                     Log.i(TAG, "PendingIntent unable to execute request.");
                                     mGoogleConnectionState = GoogleConnectionState.GOOGLE_INIT_CONNECT_FAILURE_TO_ESTABLISH_CONNECTION;
