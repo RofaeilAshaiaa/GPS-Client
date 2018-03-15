@@ -17,7 +17,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:text="Tt:"
+                android:text="Ct:"
                 android:textSize="13sp"
                 app:layout_constraintBottom_toBottomOf="@+id/thetaTimeValue"
                 app:layout_constraintEnd_toStartOf="@+id/thetaTimeValue"
@@ -30,7 +30,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Tt"
+                android:text="Ct"
                 android:textSize="13sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
@@ -217,8 +217,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="upd"
                 android:padding="4dp"
+                android:text="upd"
                 android:textSize="14sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
@@ -312,8 +312,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:inputType="number"
                 android:hint="Threshold Time"
+                android:inputType="number"
                 android:textSize="14sp"
                 app:layout_constraintEnd_toStartOf="@+id/changeThresholdTime"
                 app:layout_constraintHorizontal_bias="0.5"
@@ -334,7 +334,7 @@
                 android:id="@+id/thetaCircLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Ct:"
+                android:text="Cd:"
                 android:textSize="13sp"
                 app:layout_constraintBottom_toBottomOf="@+id/thetaCircValue"
                 app:layout_constraintEnd_toStartOf="@+id/thetaCircValue"
@@ -346,7 +346,7 @@
                 android:id="@+id/thetaCircValue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Ct"
+                android:text="Cd"
                 android:textSize="18sp"
                 app:layout_constraintBottom_toBottomOf="@+id/thetaTimeLabel"
                 app:layout_constraintEnd_toStartOf="@+id/thetaTimeLabel"
@@ -378,6 +378,7 @@
                 app:layout_constraintTop_toTopOf="@+id/silentTicks" />
 
         </android.support.constraint.ConstraintLayout>
+
     </android.support.v4.widget.NestedScrollView>
 
 </layout>

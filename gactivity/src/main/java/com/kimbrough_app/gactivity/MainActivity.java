@@ -69,9 +69,6 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
     // handler for Service Binder
     private Handler mServiceBinderTimerHandler;
 
-    // The BroadcastReceiver used to listen from broadcasts from the service.
-    private LocationTickUpdatesReceiver locationTickUpdatesReceiver;
-
     private boolean mDefaultSelectionOfSpinnerCalled = false;
 
     // A reference to the service used to get location updates.
@@ -105,6 +102,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
     };
     /**
      * Receiver for broadcasts sent by the service.
+     * The BroadcastReceiver used to listen from broadcasts from the service.
      */
     private LocationTickUpdatesReceiver mTickUpdatesReceiver = new LocationTickUpdatesReceiver() {
         @Override
@@ -132,8 +130,6 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        locationTickUpdatesReceiver = new LocationTickUpdatesReceiver();
 
         mMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
@@ -277,13 +273,13 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
     @Override
     protected void onResume() {
         super.onResume();
-        LocalBroadcastManager.getInstance(this).registerReceiver(locationTickUpdatesReceiver,
+        LocalBroadcastManager.getInstance(this).registerReceiver(mTickUpdatesReceiver,
                 new IntentFilter(Utils.ACTION_BROADCAST_LOCATION));
     }
 
     @Override
     protected void onPause() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(locationTickUpdatesReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mTickUpdatesReceiver);
         super.onPause();
     }
 
@@ -469,7 +465,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerG
                         mServiceLocationManager.getSilentCircleThresholdRadius());
                 changeLibraryState();
 
-                mCountdownTimerHandler.postDelayed(mCountdownTimerRunnable, UPDATE_UI_DELAY_MILLIS);
+                mCountdownTimerHandler.postDelayed(mServiceBinderTimerRunnable, UPDATE_UI_DELAY_MILLIS);
             }
         };
 
